@@ -1,0 +1,286 @@
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { User, Mail, Phone, Save, Camera, Wallet, CreditCard, Users, Ticket, ArrowLeft } from 'lucide-react';
+import Button from '../../components/Button';
+import { usersService } from '../../services/users';
+import { useDispatch } from 'react-redux';
+import { showToast } from '../../store/uiSlice';
+import UserWallet from './UserWallet';
+import UserSubscriptions from './UserSubscriptions';
+import UserReferrals from './UserReferrals';
+import UserCoupons from './UserCoupons';
+
+type ProfileTabType = 'profile' | 'wallet' | 'subscriptions' | 'referrals' | 'coupons';
+
+const UserProfile: React.FC = () => {
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const tabParam = searchParams.get('tab') as ProfileTabType;
+    const [activeTab, setActiveTab] = useState<ProfileTabType>(tabParam || 'profile');
+
+    const [profile, setProfile] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [isEditing, setIsEditing] = useState(false);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+    // Form States
+    const [formData, setFormData] = useState({ fullName: '', email: '', phone: '' });
+
+    useEffect(() => {
+        fetchProfile();
+    }, []);
+
+    // Sync tab param with state
+    useEffect(() => {
+        if (tabParam && tabParam !== activeTab) {
+            setActiveTab(tabParam);
+        }
+    }, [tabParam]);
+
+    // Update URL when tab changes
+    const handleTabChange = (tab: ProfileTabType) => {
+        setActiveTab(tab);
+        setSearchParams({ tab });
+    };
+
+    const fetchProfile = async () => {
+        try {
+            setLoading(true);
+            const res = await usersService.getProfile();
+            const data = (res as any)?.data || res;
+            setProfile(data);
+            setFormData({
+                fullName: data.fullName || '',
+                email: data.email || '',
+                phone: data.phoneNumber || ''
+            });
+        } catch (error) {
+            console.error('Failed to load profile:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleUpdateProfile = async () => {
+        try {
+            await usersService.updateProfile({
+                fullName: formData.fullName,
+                phoneNumber: formData.phone
+            });
+            dispatch(showToast({ message: 'Profile updated successfully', type: 'success' }));
+            setIsEditing(false);
+            fetchProfile();
+        } catch (error) {
+            dispatch(showToast({ message: 'Failed to update profile', type: 'error' }));
+        }
+    };
+
+    const tabs = [
+        { id: 'profile' as ProfileTabType, label: 'Profile', icon: User },
+        { id: 'wallet' as ProfileTabType, label: 'Wallet', icon: Wallet },
+        { id: 'subscriptions' as ProfileTabType, label: 'Subscriptions', icon: CreditCard },
+        { id: 'referrals' as ProfileTabType, label: 'Referrals', icon: Users },
+        { id: 'coupons' as ProfileTabType, label: 'Coupons', icon: Ticket },
+    ];
+
+    const renderContent = () => {
+        switch (activeTab) {
+            case 'wallet':
+                return <UserWallet />;
+            case 'subscriptions':
+                return <UserSubscriptions />;
+            case 'referrals':
+                return <UserReferrals />;
+            case 'coupons':
+                return <UserCoupons />;
+            case 'profile':
+            default:
+                return renderProfileContent();
+        }
+    };
+
+    const renderProfileContent = () => {
+        if (loading) return <div className="text-center py-12 text-slate-500">Loading profile...</div>;
+        if (!profile) return null;
+
+        return (
+            <div className="max-w-4xl mx-auto space-y-8">
+                {/* Profile Header */}
+                <div className="bg-white dark:bg-slate-800 rounded-xl p-8 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row items-center gap-8">
+                    <div className="relative">
+                        <div className="w-32 h-32 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                            {profile.avatarUrl ? (
+                                <img src={profile.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-slate-400">
+                                    {profile.fullName?.charAt(0) || 'U'}
+                                </div>
+                            )}
+                        </div>
+                        <button
+                            onClick={() => fileInputRef.current?.click()}
+                            className="absolute bottom-0 right-0 p-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition-colors"
+                        >
+                            <Camera size={16} />
+                        </button>
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            className="hidden"
+                            accept="image/*"
+                        />
+                    </div>
+
+                    <div className="flex-1 text-center md:text-left">
+                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{profile.fullName}</h2>
+                        <p className="text-slate-500 dark:text-slate-400 mb-4">{profile.email}</p>
+                        <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                            <span className="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-full text-sm font-medium">
+                                {profile.role || 'User'}
+                            </span>
+                            {profile.isVerified && (
+                                <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-sm font-medium">
+                                    Verified
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Profile Information */}
+                <div className="bg-white dark:bg-slate-800 rounded-xl p-8 shadow-sm border border-slate-200 dark:border-slate-700">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <User size={20} /> Personal Information
+                        </h3>
+                        {!isEditing && (
+                            <Button variant="outline" onClick={() => setIsEditing(true)}>
+                                Edit Profile
+                            </Button>
+                        )}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                Full Name
+                            </label>
+                            <div className="relative">
+                                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                <input
+                                    type="text"
+                                    value={formData.fullName}
+                                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                                    disabled={!isEditing}
+                                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                Email
+                            </label>
+                            <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                <input
+                                    type="email"
+                                    value={formData.email}
+                                    disabled
+                                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 bg-slate-50 dark:bg-slate-800"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                Phone Number
+                            </label>
+                            <div className="relative">
+                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                <input
+                                    type="tel"
+                                    value={formData.phone}
+                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                    disabled={!isEditing}
+                                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 disabled:bg-slate-50 dark:disabled:bg-slate-800"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {isEditing && (
+                        <div className="flex gap-3 mt-6">
+                            <Button onClick={handleUpdateProfile} leftIcon={<Save size={16} />}>
+                                Save Changes
+                            </Button>
+                            <Button variant="outline" onClick={() => {
+                                setIsEditing(false);
+                                setFormData({
+                                    fullName: profile.fullName || '',
+                                    email: profile.email || '',
+                                    phone: profile.phoneNumber || ''
+                                });
+                            }}>
+                                Cancel
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
+    return (
+        <div className="max-w-7xl mx-auto">
+            {/* Header */}
+            <div className="mb-8 flex items-center gap-4">
+                <button
+                    onClick={() => navigate(-1)}
+                    className="p-2 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 rounded-full transition-colors text-blue-600 dark:text-blue-400"
+                >
+                    <ArrowLeft size={24} />
+                </button>
+                <div>
+                    <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-2">
+                        My Account
+                    </h1>
+                    <p className="text-lg text-slate-600 dark:text-slate-400">
+                        Manage your profile and account settings
+                    </p>
+                </div>
+            </div>
+
+            {/* Navigation Tabs */}
+            <div className="mb-8 overflow-x-auto pb-2">
+                <div className="flex gap-2 min-w-max p-1 bg-slate-100 dark:bg-slate-800/50 rounded-xl">
+                    {tabs.map((tab) => {
+                        const Icon = tab.icon;
+                        const isActive = activeTab === tab.id;
+                        return (
+                            <button
+                                key={tab.id}
+                                onClick={() => handleTabChange(tab.id)}
+                                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${isActive
+                                    ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-700/50'
+                                    }`}
+                            >
+                                <Icon className="w-4 h-4" />
+                                {tab.label}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Content Area */}
+            <div className="transition-opacity duration-200">
+                {renderContent()}
+            </div>
+        </div>
+    );
+};
+
+export default UserProfile;

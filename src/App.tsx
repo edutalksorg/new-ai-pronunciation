@@ -1,0 +1,521 @@
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import LandingPage from './pages/common/LandingPage';
+import RegisterPage from './pages/auth/RegisterPage';
+import LoginPage from './pages/auth/LoginPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import ResendConfirmationPage from './pages/auth/ResendConfirmationPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+import AdminDashboardPage from './pages/AdminDashboard/AdminDashboardPage';
+import AdminInstructorsPage from './pages/AdminDashboard/AdminInstructorsPage';
+import AdminPaymentsPage from './pages/AdminDashboard/AdminPaymentsPage';
+import AdminAnalyticsPage from './pages/AdminDashboard/AdminAnalyticsPage';
+import AdminProfilePage from './pages/AdminDashboard/AdminProfilePage';
+import AdminReferralsPage from './pages/AdminDashboard/AdminReferralsPage';
+import AdminSettingsPage from './pages/AdminDashboard/AdminSettingsPage';
+import AdminCouponsPage from './pages/AdminDashboard/AdminCouponsPage';
+import AdminSubscriptionsPage from './pages/AdminDashboard/AdminSubscriptionsPage';
+import SuperAdminPage from './pages/AdminDashboard/SuperAdminPage';
+import DashboardPage from './pages/UserDashboard/DashboardPage';
+import ProfilePage from './pages/UserDashboard/ProfilePage';
+import InstructorProfilePage from './pages/InstructorDashboard/InstructorProfilePage';
+// Learner pages - each with Layout wrapper
+import VoiceCallsPage from './pages/UserDashboard/VoiceCallsPage';
+import DailyTopicsPage from './pages/UserDashboard/DailyTopicsPage';
+import QuizzesPage from './pages/UserDashboard/QuizzesPage';
+import AIPronunciationPage from './pages/UserDashboard/AIPronunciationPage';
+import UserTopicDetailsPage from './pages/UserDashboard/UserTopicDetailsPage';
+import UserQuizTakingPage from './pages/UserDashboard/UserQuizTakingPage';
+
+// ... (rest of imports)
+
+// Inside Routes
+
+import WalletPage from './pages/UserDashboard/WalletPage';
+import SubscriptionsPage from './pages/UserDashboard/SubscriptionsPage';
+import ReferralsPage from './pages/UserDashboard/ReferralsPage';
+// Instructor pages
+import InstructorDashboardPage from './pages/InstructorDashboard/InstructorDashboardPage';
+import InstructorPendingPage from './pages/InstructorDashboard/InstructorPendingPage';
+import InstructorQuizzesPage from './pages/InstructorDashboard/InstructorQuizzesPage';
+import InstructorQuizEditorPage from './pages/InstructorDashboard/InstructorQuizEditorPage';
+import InstructorTopicsPage from './pages/InstructorDashboard/InstructorTopicsPage';
+import InstructorTopicEditorPage from './pages/InstructorDashboard/InstructorTopicEditorPage';
+import InstructorPronunciationPage from './pages/InstructorDashboard/InstructorPronunciationPage';
+import UserSettingsPage from './pages/UserDashboard/UserSettingsPage';
+import InstructorEarningsPage from './pages/InstructorDashboard/InstructorEarningsPage';
+import InstructorSettingsPage from './pages/InstructorDashboard/InstructorSettingsPage';
+
+import StudentAnalyticsPage from './pages/InstructorDashboard/StudentAnalyticsPage';
+import ProtectedRoute from './components/ProtectedRoute';
+import Toast from './components/Toast';
+import { RootState } from './store';
+import { setTheme } from './store/uiSlice';
+
+/**
+ * Smart Dashboard Router - Routes based on user role
+ * - Instructors → InstructorDashboardPage
+ * - Users/Learners → DashboardPage
+ * - Others → Redirect to home
+ */
+const DashboardRouter: React.FC = () => {
+  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
+
+  // Debug: Log user data
+  console.log('[DashboardRouter] Current user:', {
+    id: user?.id,
+    name: user?.fullName,
+    role: user?.role,
+    isAuthenticated
+  });
+
+  // Check authentication
+  if (!isAuthenticated || !user) {
+    console.warn('[DashboardRouter] User not authenticated, redirecting to login');
+    return <Navigate to="/login" replace />;
+  }
+
+  // Route based on role
+  const userRole = String(user.role || '').toLowerCase().trim();
+
+  console.log(`[DashboardRouter] Routing user with role: "${userRole}"`);
+
+  if (userRole === 'instructor') {
+    console.log('[DashboardRouter] Redirecting to Instructor Dashboard');
+    return <Navigate to="/instructor-dashboard" replace />;
+  } else if (userRole === 'user' || userRole === 'learner') {
+    console.log('[DashboardRouter] Displaying DashboardPage (Learner)');
+    return <DashboardPage />;
+  } else if (userRole === 'admin') {
+    console.log('[DashboardRouter] Admin user redirecting to /admin');
+    return <Navigate to="/admin" replace />;
+  } else {
+    console.warn(`[DashboardRouter] Unknown role: "${userRole}", showing learner dashboard`);
+    return <DashboardPage />;
+  }
+};
+
+/**
+ * Role-Based Route Guard Component
+ * Ensures only users with specific roles can access a page
+ */
+interface RoleBasedRouteProps {
+  allowedRoles: ('user' | 'instructor' | 'admin' | 'learner' | 'image_user')[];
+  children: React.ReactNode;
+}
+
+const RoleBasedRoute: React.FC<RoleBasedRouteProps> = ({ allowedRoles, children }) => {
+  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
+
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const userRole = user.role?.toLowerCase().trim();
+  const normalizedAllowedRoles = allowedRoles.map(r => r.toLowerCase());
+
+  console.log('[RoleBasedRoute] Checking access:', {
+    userRole,
+    allowedRoles: normalizedAllowedRoles,
+    allowed: normalizedAllowedRoles.includes(userRole as string)
+  });
+
+  if (!normalizedAllowedRoles.includes(userRole as string)) {
+    console.warn(`[RoleBasedRoute] Access denied for role: ${userRole}`);
+    // Redirect to appropriate dashboard
+    if (userRole === 'instructor') {
+      return <Navigate to="/instructor-dashboard" replace />;
+    } else if (userRole === 'admin') {
+      return <Navigate to="/admin" replace />;
+    } else {
+      return <Navigate to="/dashboard" replace />;
+    }
+  }
+
+  return <>{children}</>;
+};
+
+function App() {
+  const dispatch = useDispatch();
+  const { theme } = useSelector((state: RootState) => state.ui);
+  const { user } = useSelector((state: RootState) => state.auth);
+
+  // Debug: Log app initialization
+  console.log('[App] Initialized with user:', user?.role);
+
+  // Initialize theme on mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('edutalks_theme') as 'light' | 'dark' || 'light';
+    dispatch(setTheme(savedTheme));
+  }, [dispatch]);
+
+  // Apply theme class to document
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
+  return (
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/resend-confirmation" element={<ResendConfirmationPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+
+        {/* Admin Routes - Restricted to admin role */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['admin']}>
+                <AdminDashboardPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/profile"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['admin']}>
+                <AdminProfilePage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/instructors"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['admin']}>
+                <AdminInstructorsPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/payments"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['admin']}>
+                <AdminPaymentsPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/analytics"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['admin']}>
+                <AdminAnalyticsPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+
+        />
+        <Route
+          path="/admin/referrals"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['admin']}>
+                <AdminReferralsPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/settings"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['admin']}>
+                <AdminSettingsPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/coupons"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['admin']}>
+                <AdminCouponsPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/subscriptions"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['admin']}>
+                <AdminSubscriptionsPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/super"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['admin']}>
+                <SuperAdminPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Protected Routes - Available to authenticated users */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <DashboardRouter />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Instructor Dashboard - Restricted to instructors */}
+        <Route
+          path="/instructor-dashboard"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['instructor']}>
+                <InstructorDashboardPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instructor/profile"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['instructor']}>
+                <InstructorProfilePage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Instructor Topics - Restricted to instructors */}
+        {/* Instructor Content Management */}
+        <Route
+          path="/instructor/quizzes"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['instructor']}>
+                <InstructorQuizzesPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instructor/quizzes/new"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['instructor']}>
+                <InstructorQuizEditorPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instructor/quizzes/:id"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['instructor']}>
+                <InstructorQuizEditorPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instructor/topics"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['instructor']}>
+                <InstructorTopicsPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instructor/topics/new"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['instructor']}>
+                <InstructorTopicEditorPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instructor/topics/:id"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['instructor']}>
+                <InstructorTopicEditorPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instructor/pronunciation"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['instructor']}>
+                <InstructorPronunciationPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instructor/earnings"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['instructor']}>
+                <InstructorEarningsPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instructor/settings"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['instructor']}>
+                <InstructorSettingsPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Learner Routes */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/voice-calls"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['user', 'learner']}>
+                <VoiceCallsPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/daily-topics"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['user', 'learner']}>
+                <DailyTopicsPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/quizzes"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['user', 'learner']}>
+                <QuizzesPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/pronunciation"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['user', 'learner']}>
+                <AIPronunciationPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/topics/:id"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['user', 'learner']}>
+                <UserTopicDetailsPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/quizzes/:id"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['user', 'learner']}>
+                <UserQuizTakingPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* General Routes - Available to all authenticated users */}
+        <Route
+          path="/wallet"
+          element={
+            <ProtectedRoute>
+              <WalletPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/subscriptions"
+          element={
+            <ProtectedRoute>
+              <SubscriptionsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/referrals"
+          element={
+            <ProtectedRoute>
+              <ReferralsPage />
+            </ProtectedRoute>
+          }
+        />
+
+
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['user', 'image_user', 'instructor', 'admin']}>
+                <UserSettingsPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+
+      {/* Toast Notifications */}
+      <Toast />
+    </Router >
+  );
+}
+
+export default App;
+

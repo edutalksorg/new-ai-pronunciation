@@ -1,0 +1,181 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate, useLocation } from 'react-router-dom';
+import {
+    LogOut,
+    Settings,
+    Wallet,
+    Users,
+    User,
+    Ticket,
+    Home,
+    Moon,
+    Sun,
+    BookOpen,
+    Mic,
+    Menu
+} from 'lucide-react';
+import type { RootState, AppDispatch } from '../store';
+import { logout } from '../store/authSlice';
+import { toggleTheme } from '../store/uiSlice';
+import OnlineStatusIndicator from './OnlineStatusIndicator';
+import TrialTimer from './TrialTimer';
+import { useUsageLimits } from '../hooks/useUsageLimits';
+
+interface UserLayoutProps {
+    children: React.ReactNode;
+}
+
+const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
+    const dispatch = useDispatch<AppDispatch>();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { user } = useSelector((state: RootState) => state.auth);
+    const { theme } = useSelector((state: RootState) => state.ui);
+
+    const [profileOpen, setProfileOpen] = useState(false);
+    const profileRef = useRef<HTMLDivElement | null>(null);
+    const {
+        hasActiveSubscription,
+        trialExpiresAt,
+        triggerUpgradeModal,
+    } = useUsageLimits();
+
+    const handleLogout = () => {
+        dispatch(logout());
+        navigate('/');
+    };
+
+    // Close profile dropdown when clicking outside or pressing Escape
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (!profileRef.current) return;
+            if (profileOpen && !profileRef.current.contains(e.target as Node)) {
+                setProfileOpen(false);
+            }
+        };
+
+        const handleKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && profileOpen) setProfileOpen(false);
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleKey);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleKey);
+        };
+    }, [profileOpen]);
+
+    const menuItems = [
+        { icon: <Home size={18} />, label: 'Dashboard', path: '/dashboard' },
+        { icon: <Wallet size={18} />, label: 'Wallet', path: '/wallet' },
+        { icon: <Ticket size={18} />, label: 'Subscriptions', path: '/subscriptions' },
+        { icon: <Users size={18} />, label: 'Referrals', path: '/referrals' },
+        { icon: <User size={18} />, label: 'Profile', path: '/profile' },
+        { icon: <Settings size={18} />, label: 'Settings', path: '/settings' },
+    ];
+
+    return (
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col">
+            {/* Header */}
+            <header className="sticky top-0 z-40 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center justify-between h-16">
+                        {/* Logo */}
+                        <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/dashboard')}>
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center">
+                                <span className="text-white font-bold text-lg">E</span>
+                            </div>
+                            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent hidden sm:block">
+                                EduTalks
+                            </span>
+                        </div>
+
+                        {/* Right Actions */}
+                        <div className="flex items-center gap-4">
+                            {/* Trial Timer */}
+                            <TrialTimer
+                                trialExpiresAt={trialExpiresAt}
+                                hasActiveSubscription={hasActiveSubscription}
+                                onUpgrade={triggerUpgradeModal}
+                            />
+
+                            {/* Theme Toggle */}
+                            <button
+                                onClick={() => dispatch(toggleTheme())}
+                                className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                                aria-label="Toggle theme"
+                            >
+                                {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                            </button>
+
+                            {/* Profile Dropdown */}
+                            <div className="relative" ref={profileRef}>
+                                <button
+                                    onClick={() => setProfileOpen(!profileOpen)}
+                                    className="flex items-center gap-2 focus:outline-none relative"
+                                >
+                                    <div className="relative">
+                                        <img
+                                            src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || 'User')}`}
+                                            alt="Profile"
+                                            className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700"
+                                        />
+                                        <OnlineStatusIndicator />
+                                    </div>
+                                </button>
+
+                                {profileOpen && (
+                                    <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl py-2 z-50">
+                                        <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 mb-2">
+                                            <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                                                {user?.fullName}
+                                            </p>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                                                {user?.email}
+                                            </p>
+                                        </div>
+
+                                        <div className="max-h-[60vh] overflow-y-auto">
+                                            {menuItems.map((item) => (
+                                                <button
+                                                    key={item.path}
+                                                    onClick={() => {
+                                                        setProfileOpen(false);
+                                                        navigate(item.path);
+                                                    }}
+                                                    className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                                                >
+                                                    {item.icon}
+                                                    {item.label}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        <div className="mt-2 border-t border-slate-200 dark:border-slate-800 pt-2">
+                                            <button
+                                                onClick={() => { setProfileOpen(false); handleLogout(); }}
+                                                className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
+                                            >
+                                                <LogOut size={18} />
+                                                Sign Out
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            {/* Main Content */}
+            <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {children}
+            </main>
+        </div>
+    );
+};
+
+export default UserLayout;
