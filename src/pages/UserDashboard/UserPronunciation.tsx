@@ -12,8 +12,14 @@ const UserPronunciation: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const [paragraphs, setParagraphs] = useState<any[]>([]);
-    const [currentParaIndex, setCurrentParaIndex] = useState(0);
-    const [unlockedIndex, setUnlockedIndex] = useState(0);
+    const [currentParaIndex, setCurrentParaIndex] = useState(() => {
+        const stored = localStorage.getItem('pronunciation_unlocked_index');
+        return stored ? parseInt(stored, 10) : 0;
+    });
+    const [unlockedIndex, setUnlockedIndex] = useState(() => {
+        const stored = localStorage.getItem('pronunciation_unlocked_index');
+        return stored ? parseInt(stored, 10) : 0;
+    });
     const [loading, setLoading] = useState(false);
     const [practiceComplete, setPracticeComplete] = useState(false);
     const {
@@ -41,14 +47,30 @@ const UserPronunciation: React.FC = () => {
     };
 
     const handlePronunciationSubmit = (result: any) => {
-        if (result && result.accuracy >= 75) {
-            dispatch(showToast({ message: `Great job! Accuracy: ${result.accuracy.toFixed(1)}%. Next paragraph unlocked!`, type: 'success' }));
-            if (currentParaIndex === unlockedIndex && currentParaIndex < paragraphs.length - 1) {
-                setUnlockedIndex(prev => prev + 1);
+        // Handle result mapping from API (checks for nested scores object first)
+        const accuracy = result.scores?.accuracy ?? result.pronunciationAccuracy ?? result.accuracy ?? 0;
+        const fluency = result.scores?.fluency ?? result.fluencyScore ?? result.fluency ?? 0;
+        const overall = result.scores?.overall ?? result.overallScore ?? result.OverallScore ?? 0;
+
+        console.log('Pronunciation Result processed:', { accuracy, fluency, overall, result });
+
+        if (accuracy >= 75) {
+            dispatch(showToast({ message: `Great job! Accuracy: ${accuracy.toFixed(1)}%. Next paragraph unlocked!`, type: 'success' }));
+
+            // Only unlock if we are at the current unlocked frontier
+            if (currentParaIndex === unlockedIndex) {
+                if (currentParaIndex < paragraphs.length - 1) {
+                    setUnlockedIndex(prev => {
+                        const next = prev + 1;
+                        localStorage.setItem('pronunciation_unlocked_index', next.toString());
+                        return next;
+                    });
+                }
             }
+            // Always set practice complete to show the Next button
             setPracticeComplete(true);
         } else {
-            dispatch(showToast({ message: `Accuracy: ${result.accuracy?.toFixed(1) || 0}%. Try again to reach 75%!`, type: 'info' }));
+            dispatch(showToast({ message: `Accuracy: ${accuracy.toFixed(1)}%. Try again to reach 75%!`, type: 'info' }));
             setPracticeComplete(false);
         }
     };
@@ -103,18 +125,15 @@ const UserPronunciation: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-6 border border-slate-100 dark:border-slate-700 mb-6">
-                        <h4 className="text-lg font-medium mb-2 text-slate-900 dark:text-white">{paragraphs[currentParaIndex]?.title || `Paragraph ${currentParaIndex + 1}`}</h4>
-                        <p className="text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
-                            {paragraphs[currentParaIndex]?.text || paragraphs[currentParaIndex]?.content}
-                        </p>
-                    </div>
+
 
                     {(hasActiveSubscription || isTrialActive) ? (
                         <PronunciationRecorder
                             paragraphId={paragraphs[currentParaIndex]?._id || paragraphs[currentParaIndex]?.id}
                             paragraphText={paragraphs[currentParaIndex]?.text || paragraphs[currentParaIndex]?.content}
                             onSubmit={handlePronunciationSubmit}
+                            onNext={handleNextParagraph}
+                            showNextButton={currentParaIndex < unlockedIndex}
                         />
                     ) : (
                         <div className="p-8 bg-slate-100 dark:bg-slate-800 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 text-center">

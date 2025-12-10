@@ -9,6 +9,8 @@ interface PronunciationRecorderProps {
   paragraphText: string;
   onSubmit?: (result: any) => void;
   onCancel?: () => void;
+  onNext?: () => void;
+  showNextButton?: boolean;
 }
 
 export const PronunciationRecorder: React.FC<PronunciationRecorderProps> = ({
@@ -16,6 +18,8 @@ export const PronunciationRecorder: React.FC<PronunciationRecorderProps> = ({
   paragraphText,
   onSubmit,
   onCancel,
+  onNext,
+  showNextButton = false,
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
@@ -66,6 +70,11 @@ export const PronunciationRecorder: React.FC<PronunciationRecorderProps> = ({
       }
     };
   }, []);
+
+  // Reset state when paragraph changes
+  useEffect(() => {
+    handleReset();
+  }, [paragraphId, paragraphText]);
 
   // Recording timer
   useEffect(() => {
@@ -142,7 +151,57 @@ export const PronunciationRecorder: React.FC<PronunciationRecorderProps> = ({
       setError(null);
 
       // Submit audio for assessment
-      const result = await pronunciationService.assessAudio(paragraphId, recordedAudio);
+      let result: any = await pronunciationService.assessAudio(paragraphId, recordedAudio);
+      console.log('Initial assessment response:', result);
+
+      // Handle raw string ID response
+      let attemptId = null;
+      if (typeof result === 'string') {
+        attemptId = result;
+        // If we just got an ID, we MUST fetch details immediately
+        const details = await pronunciationService.getAttemptDetails(attemptId);
+        result = details || { id: attemptId };
+      } else if (result && result.id) {
+        attemptId = result.id;
+      }
+
+      // Check strictly for processing status
+      let isPending = result?.processing?.status === 'Pending' || result?.processing?.status === 'Processing' || result?.processing?.isPending || result?.processing?.isProcessing;
+
+      // Also treat as pending if we have an ID but absolutely no score data yet (and no error)
+      if (!isPending && attemptId && !result.scores && result.pronunciationAccuracy === undefined) {
+        isPending = true;
+      }
+
+      // Polling Loop
+      let attempts = 0;
+      const maxAttempts = 10;
+
+      while (isPending && attempts < maxAttempts) {
+        attempts++;
+        console.log(`Assessment pending (Attempt ${attempts}/${maxAttempts})... waiting...`);
+
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2s
+
+        try {
+          const details = await pronunciationService.getAttemptDetails(attemptId);
+          console.log('Polled details:', details);
+
+          if (details) {
+            result = details; // Update result with latest details
+
+            // Update pending status
+            isPending = result?.processing?.status === 'Pending' || result?.processing?.status === 'Processing' || result?.processing?.isPending || result?.processing?.isProcessing;
+
+            // If completed, break
+            if (result?.processing?.status === 'Completed' || result?.processing?.isCompleted) {
+              isPending = false;
+            }
+          }
+        } catch (pollErr) {
+          console.error('Polling error:', pollErr);
+        }
+      }
 
       setAssessmentResult(result);
       setShowResult(true);
@@ -160,6 +219,11 @@ export const PronunciationRecorder: React.FC<PronunciationRecorderProps> = ({
         setError('SUBSCRIPTION_REQUIRED');
       } else {
         setError('Failed to assess pronunciation. Please try again.');
+        // Debug: still show result if partial data exists
+        if (err.data || err.response?.data) {
+          console.warn('Attempting to show partial results from error response');
+          // optional: setAssessmentResult(err.data || err.response?.data);
+        }
       }
     } finally {
       setIsLoading(false);
@@ -187,15 +251,21 @@ export const PronunciationRecorder: React.FC<PronunciationRecorderProps> = ({
           <div className="grid grid-cols-3 gap-4 mb-6">
             <div className="bg-slate-700 rounded-lg p-4">
               <p className="text-sm text-slate-400 mb-1">Accuracy</p>
-              <p className="text-3xl font-bold text-blue-400">{assessmentResult.accuracy?.toFixed(1) || 'N/A'}%</p>
+              <p className="text-3xl font-bold text-blue-400">
+                {(assessmentResult.scores?.accuracy ?? assessmentResult.pronunciationAccuracy ?? assessmentResult.accuracy)?.toFixed(1) || 'N/A'}%
+              </p>
             </div>
             <div className="bg-slate-700 rounded-lg p-4">
               <p className="text-sm text-slate-400 mb-1">Fluency</p>
-              <p className="text-3xl font-bold text-green-400">{assessmentResult.fluency?.toFixed(1) || 'N/A'}%</p>
+              <p className="text-3xl font-bold text-green-400">
+                {(assessmentResult.scores?.fluency ?? assessmentResult.fluencyScore ?? assessmentResult.fluency)?.toFixed(1) || 'N/A'}%
+              </p>
             </div>
             <div className="bg-slate-700 rounded-lg p-4">
               <p className="text-sm text-slate-400 mb-1">Overall Score</p>
-              <p className="text-3xl font-bold text-yellow-400">{assessmentResult.overallScore?.toFixed(1) || 'N/A'}%</p>
+              <p className="text-3xl font-bold text-yellow-400">
+                {(assessmentResult.scores?.overall ?? assessmentResult.overallScore ?? assessmentResult.OverallScore)?.toFixed(1) || 'N/A'}%
+              </p>
             </div>
           </div>
 
@@ -207,20 +277,40 @@ export const PronunciationRecorder: React.FC<PronunciationRecorderProps> = ({
             </div>
           )}
 
-          {/* Mistakes */}
-          {assessmentResult.mistakes && assessmentResult.mistakes.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold text-slate-400 uppercase mb-2">Areas for Improvement</h3>
-              <ul className="space-y-2">
-                {assessmentResult.mistakes.map((mistake: string, idx: number) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <span className="text-red-400 mt-1">•</span>
-                    <span className="text-slate-300">{mistake}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          {/* Mistakes with Word Level Feedback fallback */}
+          {((assessmentResult.mistakes && assessmentResult.mistakes.length > 0) ||
+            (assessmentResult.wordLevelFeedback && assessmentResult.wordLevelFeedback.length > 0) ||
+            (assessmentResult.detailedFeedback?.words && assessmentResult.detailedFeedback.words.length > 0)) && (
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold text-slate-400 uppercase mb-2">Areas for Improvement</h3>
+                <ul className="space-y-2">
+                  {assessmentResult.mistakes ? (
+                    assessmentResult.mistakes.map((mistake: string, idx: number) => (
+                      <li key={idx} className="flex items-start gap-2">
+                        <span className="text-red-400 mt-1">•</span>
+                        <span className="text-slate-300">{mistake}</span>
+                      </li>
+                    ))
+                  ) : (
+                    (assessmentResult.wordLevelFeedback || assessmentResult.detailedFeedback?.words || [])
+                      .filter((w: any) => w.accuracyScore < 80)
+                      .slice(0, 5) // Limit to top 5 errors
+                      .map((w: any, idx: number) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <span className="text-red-400 mt-1">•</span>
+                          <span className="text-slate-300">
+                            <span className="font-bold text-red-300">"{w.word}"</span>
+                            <span className="text-slate-400 text-sm ml-2">(Accuracy: {w.accuracyScore.toFixed(0)}%)</span>
+                            {w.errorType && w.errorType !== 'None' && <span className="text-slate-500 text-xs ml-1">[{w.errorType}]</span>}
+                          </span>
+                        </li>
+                      ))
+                  )}
+                </ul>
+              </div>
+            )}
+
+
 
           {/* Recommendations */}
           {assessmentResult.recommendations && assessmentResult.recommendations.length > 0 && (
@@ -245,6 +335,17 @@ export const PronunciationRecorder: React.FC<PronunciationRecorderProps> = ({
             >
               Try Again
             </Button>
+            {showNextButton && onNext && (
+              <Button
+                onClick={() => {
+                  handleReset(); // Clear result before navigating
+                  onNext();
+                }}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+              >
+                Next Paragraph
+              </Button>
+            )}
             {onCancel && (
               <Button
                 onClick={onCancel}
