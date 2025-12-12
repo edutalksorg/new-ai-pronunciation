@@ -89,10 +89,10 @@ const UserSubscriptions: React.FC = () => {
                 <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-6 flex justify-between items-center">
                     <div>
                         <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                            Current Plan: <span className="text-primary-600">{currentSub.planName || 'Free Trial'}</span>
+                            Current Plan: <span className="text-primary-600">{currentSub.planName || currentSub.plan?.name || 'Free Trial'}</span>
                         </h3>
                         <p className="text-sm text-slate-500">
-                            {currentSub.status === 'active' ? 'Active' : 'Expired'} • Renews on {new Date(currentSub.endDate).toLocaleDateString()}
+                            {['active', 'trialing', 'succeeded', 'year'].includes(currentSub.status?.toLowerCase()) ? 'Active' : 'Expired'} • Renews on {new Date(currentSub.endDate || currentSub.renewalDate).toLocaleDateString()}
                         </p>
                     </div>
                     <Button variant="outline" size="sm">Manage Subscription</Button>

@@ -4,6 +4,7 @@ import { User, Mail, Phone, Save, Camera, Wallet, CreditCard, Users, Ticket, Arr
 import Button from '../../components/Button';
 import { usersService } from '../../services/users';
 import { useDispatch } from 'react-redux';
+import { setUser, updateUserSubscription } from '../../store/authSlice';
 import { showToast } from '../../store/uiSlice';
 import UserWallet from './UserWallet';
 import UserSubscriptions from './UserSubscriptions';
@@ -80,6 +81,28 @@ const UserProfile: React.FC = () => {
             setLoading(false);
         }
     };
+
+    // Effect to sync Redux state when profile or subscription updates
+    useEffect(() => {
+        if (profile) {
+            // Update basic user info
+            dispatch(setUser({
+                ...profile,
+                // Ensure subscription fields are preserved/merged if they exist in profile
+                subscriptionStatus: profile.subscriptionStatus || profile.subscription?.status,
+                subscriptionPlan: profile.subscriptionPlan || profile.subscription?.planName || profile.subscription?.plan?.name,
+            }));
+        }
+
+        if (currentSubscription) {
+            // Update subscription specific info
+            dispatch(updateUserSubscription({
+                subscriptionStatus: currentSubscription.status,
+                subscriptionPlan: currentSubscription.plan?.name || currentSubscription.planName,
+                trialEndDate: currentSubscription.endDate || currentSubscription.renewalDate
+            }));
+        }
+    }, [profile, currentSubscription, dispatch]);
 
     const handleUpdateProfile = async () => {
         try {
@@ -169,8 +192,8 @@ const UserProfile: React.FC = () => {
 
                 {/* Subscription Card */}
                 <div className={`rounded-xl p-8 shadow-lg text-white mb-8 transition-all ${currentSubscription
-                        ? 'bg-gradient-to-r from-indigo-500 to-purple-600'
-                        : 'bg-gradient-to-r from-slate-600 to-slate-700 dark:from-slate-800 dark:to-slate-900 border border-slate-500/30'
+                    ? 'bg-gradient-to-r from-indigo-500 to-purple-600'
+                    : 'bg-gradient-to-r from-slate-600 to-slate-700 dark:from-slate-800 dark:to-slate-900 border border-slate-500/30'
                     }`}>
                     <div className="flex justify-between items-start">
                         <div>
@@ -180,8 +203,8 @@ const UserProfile: React.FC = () => {
                             </p>
                             <div className="flex items-center gap-2">
                                 <div className={`px-3 py-1 rounded-full text-xs font-bold ${currentSubscription?.status === 'active' || currentSubscription?.status === 'Trialing'
-                                        ? 'bg-green-400/30 text-green-100'
-                                        : !currentSubscription ? 'bg-blue-400/30 text-blue-100' : 'bg-red-400/30 text-red-100'
+                                    ? 'bg-green-400/30 text-green-100'
+                                    : !currentSubscription ? 'bg-blue-400/30 text-blue-100' : 'bg-red-400/30 text-red-100'
                                     }`}>
                                     {currentSubscription?.status === 'active' || currentSubscription?.status === 'Trialing' ? 'ACTIVE' : !currentSubscription ? 'ACTIVE' : 'EXPIRED'}
                                 </div>

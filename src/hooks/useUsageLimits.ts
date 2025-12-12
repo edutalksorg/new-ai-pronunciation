@@ -10,7 +10,18 @@ export const useUsageLimits = () => {
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
     // Check if user has active subscription (unlimited access)
-    const hasActiveSubscription = user?.subscriptionStatus === 'active';
+    // Robust subscription check handling lower case, trialing, and plan existence
+    const status = (user?.subscriptionStatus || (user as any)?.subscription?.status || '').toLowerCase();
+    const plan = (user?.subscriptionPlan || (user as any)?.subscription?.planName || '').toLowerCase();
+
+    // Check for active status or valid paid plan that isn't explicitly expired
+    const isActiveStatus = status === 'active' || status === 'trialing' || status === 'succeeded';
+    const isPaidPlan = ['basic', 'premium', 'yearly', 'pro'].some(p => plan.includes(p));
+    const isExplicitlyExpired = ['expired', 'cancelled', 'past_due'].includes(status);
+
+    const hasActiveSubscription = (user?.role === 'admin' || user?.role === 'instructor') ||
+        isActiveStatus ||
+        (isPaidPlan && !isExplicitlyExpired);
 
     // Check and reset usage on mount and periodically
     useEffect(() => {
