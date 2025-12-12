@@ -116,9 +116,14 @@ const UserSettingsPage: React.FC = () => {
                             <div className="flex justify-between items-center">
                                 <div>
                                     <p className="font-medium text-slate-900 dark:text-white">Change Password</p>
-                                    <p className="text-sm text-slate-500">Last changed 3 months ago</p>
+                                    <p className="text-sm text-slate-500">Update your account password</p>
                                 </div>
-                                <Button variant="outline">Update</Button>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => navigate('/change-password')}
+                                >
+                                    Update
+                                </Button>
                             </div>
                         </div>
                     </div>

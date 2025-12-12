@@ -71,4 +71,8 @@ export const authService = {
   resetPassword: async (payload: { userId: string; token: string; newPassword: string }): Promise<any> => {
     return apiService.post(API_ENDPOINTS.RESET_PASSWORD, payload);
   },
+
+  changePassword: async (data: { currentPassword: string; newPassword: string; confirmPassword: string }): Promise<any> => {
+    return apiService.put('/auth/change-password', data);
+  },
 };

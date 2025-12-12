@@ -10,6 +10,7 @@ import LoginPage from './pages/auth/LoginPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResendConfirmationPage from './pages/auth/ResendConfirmationPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+import ChangePasswordPage from './pages/auth/ChangePasswordPage';
 import AdminDashboardPage from './pages/AdminDashboard/AdminDashboardPage';
 import AdminInstructorsPage from './pages/AdminDashboard/AdminInstructorsPage';
 import AdminPaymentsPage from './pages/AdminDashboard/AdminPaymentsPage';
@@ -567,6 +568,15 @@ function App() {
               <RoleBasedRoute allowedRoles={['user', 'image_user', 'instructor', 'admin']}>
                 <UserSettingsPage />
               </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/change-password"
+          element={
+            <ProtectedRoute>
+              <ChangePasswordPage />
             </ProtectedRoute>
           }
         />
