@@ -3,8 +3,9 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { User, Mail, Phone, Save, Camera, Wallet, CreditCard, Users, Ticket, ArrowLeft } from 'lucide-react';
 import Button from '../../components/Button';
 import { usersService } from '../../services/users';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setUser, updateUserSubscription } from '../../store/authSlice';
+import { RootState } from '../../store';
 import { showToast } from '../../store/uiSlice';
 import UserWallet from './UserWallet';
 import UserSubscriptions from './UserSubscriptions';
@@ -17,6 +18,7 @@ type ProfileTabType = 'profile' | 'wallet' | 'subscriptions' | 'referrals' | 'co
 const UserProfile: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    const { user } = useSelector((state: RootState) => state.auth);
     const [searchParams, setSearchParams] = useSearchParams();
     const tabParam = searchParams.get('tab') as ProfileTabType;
     const [activeTab, setActiveTab] = useState<ProfileTabType>(tabParam || 'profile');
@@ -59,6 +61,20 @@ const UserProfile: React.FC = () => {
                 phone: data.phoneNumber || ''
             });
 
+            // Dispatch updates to Redux immediately after fetch
+            // IMPORTANT: Merge with existing user to preserve role and id
+            if (user) {
+                dispatch(setUser({
+                    ...user,
+                    ...data, // Profile data
+                    id: user.id || data.userId,
+                    role: user.role, // Preserve role
+                    avatar: data.avatarUrl || user.avatar,
+                    subscriptionStatus: data.subscriptionStatus || data.subscription?.status || user.subscriptionStatus,
+                    subscriptionPlan: data.subscriptionPlan || data.subscription?.planName || data.subscription?.plan?.name || user.subscriptionPlan,
+                }));
+            }
+
             // Fetch Subscription (Handle 404/Empty safely)
             try {
                 const subRes = await subscriptionsService.current();
@@ -67,6 +83,12 @@ const UserProfile: React.FC = () => {
                 // Only set if we have valid data, otherwise null implues Free Plan
                 if (subData && (subData.status || subData.planId)) {
                     setCurrentSubscription(subData);
+                    // Dispatch subscription update immediately
+                    dispatch(updateUserSubscription({
+                        subscriptionStatus: subData.status,
+                        subscriptionPlan: subData.plan?.name || subData.planName,
+                        trialEndDate: subData.endDate || subData.renewalDate
+                    }));
                 } else {
                     setCurrentSubscription(null);
                 }
@@ -82,27 +104,8 @@ const UserProfile: React.FC = () => {
         }
     };
 
-    // Effect to sync Redux state when profile or subscription updates
-    useEffect(() => {
-        if (profile) {
-            // Update basic user info
-            dispatch(setUser({
-                ...profile,
-                // Ensure subscription fields are preserved/merged if they exist in profile
-                subscriptionStatus: profile.subscriptionStatus || profile.subscription?.status,
-                subscriptionPlan: profile.subscriptionPlan || profile.subscription?.planName || profile.subscription?.plan?.name,
-            }));
-        }
-
-        if (currentSubscription) {
-            // Update subscription specific info
-            dispatch(updateUserSubscription({
-                subscriptionStatus: currentSubscription.status,
-                subscriptionPlan: currentSubscription.plan?.name || currentSubscription.planName,
-                trialEndDate: currentSubscription.endDate || currentSubscription.renewalDate
-            }));
-        }
-    }, [profile, currentSubscription, dispatch]);
+    // Removed sync useEffect to avoid infinite loops and stale closures. 
+    // Dispatch is now handled in fetchProfile.
 
     const handleUpdateProfile = async () => {
         try {

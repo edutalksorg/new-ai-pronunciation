@@ -184,12 +184,29 @@ function App() {
           }
 
           // Dispatch updates to Redux
-          dispatch(setUser({
-            ...profileData,
-            // Ensure subscription fields are preserved/merged if they exist in profile
-            subscriptionStatus: profileData.subscriptionStatus || profileData.subscription?.status,
-            subscriptionPlan: profileData.subscriptionPlan || profileData.subscription?.planName || profileData.subscription?.plan?.name,
-          }));
+          // IMPORTANT: Merge with existing user to preserve role and id (UserProfile lacks role)
+          // Also map mismatching fields like avatarUrl -> avatar
+          // Dispatch updates to Redux
+          // IMPORTANT: Merge with existing user to preserve role and id (UserProfile lacks role)
+          // Also map mismatching fields like avatarUrl -> avatar
+          if (user) {
+            console.log('[App] Syncing profile. Current User Role:', user.role);
+            console.log('[App] Fetched Profile Role:', profileData.role);
+
+            const mergedRole = user.role || profileData.role || 'user';
+            console.log('[App] Merging Role as:', mergedRole);
+
+            dispatch(setUser({
+              ...user,
+              ...profileData,
+              id: user.id || profileData.userId, // Prefer existing ID but fallback
+              role: mergedRole, // Use robust merge
+              avatar: profileData.avatarUrl || user.avatar,
+              // Ensure subscription fields are preserved/merged if they exist in profile
+              subscriptionStatus: profileData.subscriptionStatus || profileData.subscription?.status || user.subscriptionStatus,
+              subscriptionPlan: profileData.subscriptionPlan || profileData.subscription?.planName || profileData.subscription?.plan?.name || user.subscriptionPlan,
+            }));
+          }
 
           if (subData) {
             dispatch(updateUserSubscription({
