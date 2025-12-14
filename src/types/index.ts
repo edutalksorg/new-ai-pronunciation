@@ -81,6 +81,7 @@ export interface TopicCreateRequest {
 // Quiz Types
 export interface QuizQuestion {
   id: string;
+  type: 'MultipleChoice' | 'TrueFalse' | 'FillInTheBlank';
   question: string;
   options: string[];
   correctAnswer: number;
@@ -95,6 +96,12 @@ export interface Quiz {
   difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
   passingScore: number;
   totalQuestions: number;
+  timeLimitMinutes?: number;
+  randomizeQuestions?: boolean;
+  maxAttempts?: number;
+  showCorrectAnswers?: boolean;
+  prerequisiteQuizId?: string | null;
+  publishImmediately?: boolean;
 }
 
 export interface QuizAttempt {

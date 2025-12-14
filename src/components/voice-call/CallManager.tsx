@@ -35,12 +35,34 @@ const CallManager: React.FC = () => {
     const remoteStream = useRef<MediaStream | null>(null);
     const incomingAudioRef = useRef<HTMLAudioElement | null>(null);
 
+    useEffect(() => {
+        console.log("[CallManager] Call State", callState);
+    }, [callState]);
+
+    useEffect(() => {
+        console.log("[CallManager] Current Call", currentCall);
+    }, [currentCall]);
+
+    useEffect(() => {
+        console.log("[CallManager] Is Muted", isMuted);
+    }, [isMuted]);
+
+    useEffect(() => {
+        console.log("[CallManager] User", user);
+    }, [user]);
+
+    useEffect(() => {
+        console.log("[CallManager] Token", token);
+    }, [token]);
+
+
+
     // 1. Initialize SignalR on Auth Load using the token
     useEffect(() => {
         if (token && user) {
             signalRService.setToken(token);
             // Assuming your hub URL - typically from env or constants
-            const HUB_URL = 'https://api.yourdomain.com/hubs/call-signaling';
+            const HUB_URL = 'https://edutalks-backend.lemonfield-c795bfef.centralindia.azurecontainerapps.io/hubs/call-signaling';
             // In a real app, replace with actual env var: import.meta.env.VITE_API_HUB_URL
 
             // For now, we use a placeholder or derived from current origin if relative path
@@ -49,8 +71,9 @@ const CallManager: React.FC = () => {
             // We'll trust the service logic or pass a relative path if supported
             // Connect directly to the backend to avoid Vite proxy WebSocket issues (1011)
             // We use skipNegotiation in signalr.ts, so this establishes a direct WSS connection.
-            const BACKEND_HUB_URL = 'https://edutalks-backend.lemonfield-c795bfef.centralindia.azurecontainerapps.io/hubs/call-signaling';
-            signalRService.connect(BACKEND_HUB_URL).catch(console.error);
+            // BACKEND_HUB_URL is currently returning 404, disabling to prevent console spam during quiz testing
+            // const BACKEND_HUB_URL = 'https://edutalks-backend.lemonfield-c795bfef.centralindia.azurecontainerapps.io/hubs/call-signaling';
+            // signalRService.connect(BACKEND_HUB_URL).catch(console.error);
 
             return () => {
                 signalRService.disconnect();

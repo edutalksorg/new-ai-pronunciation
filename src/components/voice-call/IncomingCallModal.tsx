@@ -10,6 +10,9 @@ const IncomingCallModal: React.FC = () => {
     const dispatch = useDispatch();
     const { incomingInvitation } = useSelector((state: RootState) => state.call);
     const [timeLeft, setTimeLeft] = useState(60);
+    useEffect(() => {
+        console.log("[IncomingCallModal] Inviatation", incomingInvitation);
+    }, [incomingInvitation]);
 
     useEffect(() => {
         if (incomingInvitation) {

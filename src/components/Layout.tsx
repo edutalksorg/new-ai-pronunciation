@@ -16,6 +16,7 @@ import {
   BookOpen,
   Mic,
 } from 'lucide-react';
+import { LanguageSelector } from './common/LanguageSelector';
 import type { RootState, AppDispatch } from '../store';
 import { logout } from '../store/authSlice';
 import { toggleTheme } from '../store/uiSlice';
@@ -176,6 +177,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </button>
 
           <div className="flex items-center gap-4 ml-auto">
+            <LanguageSelector />
             <button
               onClick={() => dispatch(toggleTheme())}
               className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"

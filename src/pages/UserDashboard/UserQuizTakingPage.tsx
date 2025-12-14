@@ -136,17 +136,11 @@ const UserQuizTakingPage: React.FC<UserQuizTakingPageProps> = ({ quizId: propQui
             console.log('Started at:', startedAt);
             console.log('Quiz questions (full structure):', JSON.stringify(quiz.questions, null, 2));
 
-            // Transform answers from object to array format
-            // Backend likely expects: [{ questionId: 'xxx', selectedAnswer: 'yyy' }, ...]
-            const answersArray = Object.entries(answers).map(([questionId, selectedAnswer]) => ({
-                questionId,
-                selectedAnswer
-            }));
-
-            console.log('Answers array (transformed):', answersArray);
+            // Backend expects a dictionary: { "questionId": "answer", ... }
+            console.log('Submitting answers object:', answers);
 
             // 1. Submit the quiz
-            const submitResponse = await quizzesService.submit(quiz.id || quiz._id, answersArray, startedAt);
+            const submitResponse = await quizzesService.submit(quiz.id || quiz._id, answers, startedAt);
 
             // 2. Extract attempt ID
             // Handle various possible response structures
@@ -258,11 +252,12 @@ const UserQuizTakingPage: React.FC<UserQuizTakingPageProps> = ({ quizId: propQui
                                 Back to Dashboard
                             </Button>
 
-                            {(location as any).state?.nextQuizId ? (
+                            {/* Show Next Quiz ONLY if passed AND next quiz exists */}
+                            {((quizResult.passed || score >= passingScore) && nextQuizId) ? (
                                 <Button
                                     onClick={() => {
                                         // Force reload/navigate to new quiz
-                                        window.location.href = `/quizzes/${(location as any).state.nextQuizId}`;
+                                        window.location.href = `/quizzes/${nextQuizId}`;
                                     }}
                                     className="bg-indigo-600 hover:bg-indigo-700 text-white"
                                 >
@@ -278,13 +273,7 @@ const UserQuizTakingPage: React.FC<UserQuizTakingPageProps> = ({ quizId: propQui
                             )}
                         </div>
 
-                        {/* DEBUG SECTION - REMOVE AFTER FIXING */}
-                        <div className="mt-8 p-4 bg-slate-100 dark:bg-slate-900 rounded text-left overflow-auto max-h-60">
-                            <p className="text-xs font-bold text-red-500 mb-2">DEBUG: Raw API Response (Please check this data)</p>
-                            <pre className="text-xs font-mono text-slate-600 dark:text-slate-400">
-                                {JSON.stringify(quizResult, null, 2)}
-                            </pre>
-                        </div>
+
                     </div>
                 </div>
             </UserLayout>

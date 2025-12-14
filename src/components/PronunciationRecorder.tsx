@@ -3,6 +3,7 @@ import { Mic, StopCircle, RotateCcw, Send, Volume2 } from 'lucide-react';
 import { pronunciationService } from '../services/pronunciation';
 import { formatTime } from '../utils/helpers';
 import Button from './Button';
+import { SpeakerPlayButton } from './common/SpeakerPlayButton';
 
 interface PronunciationRecorderProps {
   paragraphId: string;
@@ -28,6 +29,9 @@ export const PronunciationRecorder: React.FC<PronunciationRecorderProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [assessmentResult, setAssessmentResult] = useState<any>(null);
   const [showResult, setShowResult] = useState(false);
+
+  // Dummy TTS State
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -74,6 +78,7 @@ export const PronunciationRecorder: React.FC<PronunciationRecorderProps> = ({
   // Reset state when paragraph changes
   useEffect(() => {
     handleReset();
+    setIsSpeaking(false);
   }, [paragraphId, paragraphText]);
 
   // Recording timer
@@ -93,6 +98,9 @@ export const PronunciationRecorder: React.FC<PronunciationRecorderProps> = ({
 
   // Start recording
   const handleStartRecording = () => {
+    // Stop speaking if recording starts
+    if (isSpeaking) setIsSpeaking(false);
+
     try {
       setError(null);
       audioChunksRef.current = [];
@@ -136,6 +144,16 @@ export const PronunciationRecorder: React.FC<PronunciationRecorderProps> = ({
       const audioUrl = URL.createObjectURL(recordedAudio);
       audioPlayRef.current.src = audioUrl;
       audioPlayRef.current.play();
+    }
+  };
+
+  // Toggle Speaker
+  const handleSpeakerToggle = () => {
+    setIsSpeaking(!isSpeaking);
+    // In future, connect to TTS logic here
+    if (!isSpeaking) {
+      // Simulate speaking duration for demo UI
+      setTimeout(() => setIsSpeaking(false), 3000);
     }
   };
 
@@ -374,9 +392,16 @@ export const PronunciationRecorder: React.FC<PronunciationRecorderProps> = ({
       <div className="p-6">
         {/* Text to Read */}
         <div className="mb-8">
-          <h3 className="text-sm font-semibold text-slate-400 uppercase mb-3">Text to Read</h3>
-          <div className="bg-slate-700 rounded-lg p-6">
-            <p className="text-xl leading-relaxed text-white">{paragraphText}</p>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-slate-400 uppercase">Text to Read</h3>
+            <SpeakerPlayButton
+              isPlaying={isSpeaking}
+              onToggle={handleSpeakerToggle}
+              disabled={isRecording}
+            />
+          </div>
+          <div className={`bg-slate-700 rounded-lg p-6 transition-colors duration-300 ${isSpeaking ? 'ring-2 ring-blue-500/50 bg-slate-700/80' : ''}`}>
+            <p className="text-xl leading-relaxed text-white font-medium">{paragraphText}</p>
           </div>
         </div>
 

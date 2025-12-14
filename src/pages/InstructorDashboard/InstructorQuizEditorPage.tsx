@@ -10,6 +10,7 @@ import { Quiz, QuizQuestion } from '../../types';
 
 const INITIAL_QUESTION: QuizQuestion = {
     id: '', // Temporary ID
+    type: 'MultipleChoice',
     question: '',
     options: ['', '', '', ''],
     correctAnswer: 0,
@@ -28,10 +29,16 @@ const QuizEditor: React.FC = () => {
         title: '',
         description: '',
         difficulty: 'Beginner',
-        passingScore: 70,
+        passingScore: 60,
         questions: [],
         categoryId: '',
-        duration: 30
+        duration: 20,
+        timeLimitMinutes: 20,
+        maxAttempts: 2,
+        randomizeQuestions: true,
+        showCorrectAnswers: true,
+        publishImmediately: true,
+        prerequisiteQuizId: null
     });
 
     useEffect(() => {
@@ -66,6 +73,7 @@ const QuizEditor: React.FC = () => {
             // Normalize questions to match our internal state structure
             const questions = (data.questions || []).map((q: any) => ({
                 id: q.id || q._id,
+                type: q.type || 'MultipleChoice',
                 // Backend returns questionText, we use question internally
                 question: q.question || q.questionText || q.QuestionText || '',
                 options: q.options || ['', '', '', ''],
@@ -78,7 +86,13 @@ const QuizEditor: React.FC = () => {
                 ...data,
                 questions: questions,
                 categoryId: data.categoryId || data.category,
-                duration: data.duration || 30
+                duration: data.duration || data.timeLimitMinutes || 20,
+                timeLimitMinutes: data.timeLimitMinutes || data.duration || 20,
+                maxAttempts: data.maxAttempts || 2,
+                randomizeQuestions: data.randomizeQuestions ?? true,
+                showCorrectAnswers: data.showCorrectAnswers ?? true,
+                publishImmediately: data.publishImmediately ?? true,
+                prerequisiteQuizId: data.prerequisiteQuizId || null
             });
         } catch (error) {
             console.error('Failed to load quiz:', error);
@@ -156,6 +170,8 @@ const QuizEditor: React.FC = () => {
                 QuestionText: q.question,
                 Question: q.question,
                 question: q.question,
+                Type: q.type || 'MultipleChoice',
+                type: q.type || 'MultipleChoice',
                 text: q.question, // Potential fallback
 
                 // Options
@@ -209,7 +225,26 @@ const QuizEditor: React.FC = () => {
 
                 // Questions
                 Questions: mappedQuestions,
-                questions: mappedQuestions
+                questions: mappedQuestions,
+
+                // New Fields matching User Request
+                TimeLimitMinutes: (formData as any).timeLimitMinutes || (formData as any).duration || 20,
+                timeLimitMinutes: (formData as any).timeLimitMinutes || (formData as any).duration || 20,
+
+                RandomizeQuestions: (formData as any).randomizeQuestions,
+                randomizeQuestions: (formData as any).randomizeQuestions,
+
+                MaxAttempts: (formData as any).maxAttempts,
+                maxAttempts: (formData as any).maxAttempts,
+
+                ShowCorrectAnswers: (formData as any).showCorrectAnswers,
+                showCorrectAnswers: (formData as any).showCorrectAnswers,
+
+                PublishImmediately: (formData as any).publishImmediately,
+                publishImmediately: (formData as any).publishImmediately,
+
+                PrerequisiteQuizId: (formData as any).prerequisiteQuizId,
+                prerequisiteQuizId: (formData as any).prerequisiteQuizId
             };
 
             if (isEditMode && id) {
@@ -365,8 +400,71 @@ const QuizEditor: React.FC = () => {
                                 />
                             </div>
                         </div>
+
+                        {/* New Settings Row */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                    Time Limit (Minutes)
+                                </label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={(formData as any).timeLimitMinutes || 20}
+                                    onChange={(e) => handleInputChange('timeLimitMinutes' as any, parseInt(e.target.value))}
+                                    className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                    Max Attempts
+                                </label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={(formData as any).maxAttempts || 2}
+                                    onChange={(e) => handleInputChange('maxAttempts' as any, parseInt(e.target.value))}
+                                    className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Toggles */}
+                        <div className="flex flex-wrap gap-6 pt-2">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={(formData as any).randomizeQuestions ?? true}
+                                    onChange={(e) => handleInputChange('randomizeQuestions' as any, e.target.checked)}
+                                    className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Randomize Questions</span>
+                            </label>
+
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={(formData as any).showCorrectAnswers ?? true}
+                                    onChange={(e) => handleInputChange('showCorrectAnswers' as any, e.target.checked)}
+                                    className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Show Correct Answers</span>
+                            </label>
+
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={(formData as any).publishImmediately ?? true}
+                                    onChange={(e) => handleInputChange('publishImmediately' as any, e.target.checked)}
+                                    className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Publish Immediately</span>
+                            </label>
+                        </div>
                     </div>
+
                 </div>
+
 
                 {/* Questions Section */}
                 <div className="space-y-4">
@@ -398,17 +496,34 @@ const QuizEditor: React.FC = () => {
                                 </div>
 
                                 <div className="flex-1 space-y-4">
-                                    <div className="flex items-center gap-3">
-                                        <span className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center font-bold text-slate-600 dark:text-slate-300">
-                                            {qIndex + 1}
-                                        </span>
-                                        <input
-                                            type="text"
-                                            value={question.question}
-                                            onChange={(e) => handleQuestionChange(qIndex, 'question', e.target.value)}
-                                            placeholder="Enter the question text"
-                                            className="flex-1 px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 font-medium"
-                                        />
+                                    <div className="flex flex-col gap-3">
+                                        <div className="flex items-center gap-3">
+                                            <span className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center font-bold text-slate-600 dark:text-slate-300">
+                                                {qIndex + 1}
+                                            </span>
+                                            <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-3">
+                                                <div className="md:col-span-3">
+                                                    <input
+                                                        type="text"
+                                                        value={question.question}
+                                                        onChange={(e) => handleQuestionChange(qIndex, 'question', e.target.value)}
+                                                        placeholder="Enter the question text"
+                                                        className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 font-medium"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <select
+                                                        value={question.type || 'MultipleChoice'}
+                                                        onChange={(e) => handleQuestionChange(qIndex, 'type', e.target.value)}
+                                                        className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm"
+                                                    >
+                                                        <option value="MultipleChoice">Multiple Choice</option>
+                                                        <option value="TrueFalse">True / False</option>
+                                                        <option value="FillInTheBlank">Fill in the Blank</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div className="pl-11 space-y-3">
