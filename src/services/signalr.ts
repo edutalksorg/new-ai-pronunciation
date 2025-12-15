@@ -268,11 +268,76 @@ class SignalRService {
 
         callLogger.debug('Registering SignalR event handlers');
 
-        // ... [Items 1-6 remain unchanged, using simple replacement] ... 
-        // We will target the WebRTC section specifically
+        const register = (methodName: string, handler: (...args: any[]) => void) => {
+            // Register PascalCase
+            this.connection?.on(methodName, handler);
+            // Register lowercase (as seen in logs)
+            this.connection?.on(methodName.toLowerCase(), handler);
+            // Register camelCase (just in case)
+            this.connection?.on(methodName.charAt(0).toLowerCase() + methodName.slice(1), handler);
+        };
+
+        // 1. CallInvitation
+        register('CallInvitation', (payload: any) => {
+            callLogger.signalrEvent('CallInvitation', payload);
+
+            // Normalize payload to handle PascalCase or camelCase
+            const normalizedPayload: CallInvitationEvent = {
+                callId: payload.callId || payload.CallId,
+                callerName: payload.callerName || payload.CallerName,
+                callerAvatar: payload.callerAvatar || payload.CallerAvatar,
+                timestamp: payload.timestamp || payload.Timestamp,
+                expiresInSeconds: payload.expiresInSeconds || payload.ExpiresInSeconds || 60
+            };
+
+            callLogger.info(`🔔 Incoming call from ${normalizedPayload.callerName}`, {
+                callId: normalizedPayload.callId,
+                expiresIn: normalizedPayload.expiresInSeconds
+            });
+            store.dispatch(setIncomingInvitation(normalizedPayload));
+        });
+
+        // 2. CallAccepted
+        register('CallAccepted', (payload: { callId: string }) => {
+            callLogger.signalrEvent('CallAccepted', payload);
+            callLogger.info('✅ Call accepted by callee', payload);
+            store.dispatch(setCallStatus('connecting'));
+        });
+
+        // 3. CallRejected
+        register('CallRejected', (payload: { callId: string }) => {
+            callLogger.signalrEvent('CallRejected', payload);
+            callLogger.warning('❌ Call rejected by callee', payload);
+            store.dispatch(endCall());
+        });
+
+        // 4. CallEnded
+        register('CallEnded', (payload: { callId: string; reason: string; timestamp?: string }) => {
+            callLogger.signalrEvent('CallEnded', payload);
+            callLogger.info(`📞 Call ended: ${payload.reason}`, {
+                callId: payload.callId,
+                timestamp: payload.timestamp
+            });
+            store.dispatch(endCall());
+        });
+
+        // 5. CallActive
+        register('CallActive', (payload: { callId: string }) => {
+            callLogger.signalrEvent('CallActive', payload);
+            callLogger.info('🟢 Call is now active', payload);
+            store.dispatch(setCallStatus('active'));
+        });
+
+        // 6. DurationWarning
+        register('DurationWarning', (payload: { remainingMinutes: number; timestamp?: string }) => {
+            callLogger.signalrEvent('DurationWarning', payload);
+            callLogger.warning(`⏰ ${payload.remainingMinutes} minutes remaining`, payload);
+        });
+
+        // WebRTC Signaling Events
 
         // 7. ReceiveOffer
-        this.connection.on('ReceiveOffer', (sdp: string) => {
+        register('ReceiveOffer', (sdp: string) => {
             callLogger.signalrEvent('ReceiveOffer', { sdpLength: sdp.length });
             callLogger.sdp('offer', 'received', 'current');
 
@@ -285,7 +350,7 @@ class SignalRService {
         });
 
         // 8. ReceiveAnswer
-        this.connection.on('ReceiveAnswer', (sdp: string) => {
+        register('ReceiveAnswer', (sdp: string) => {
             callLogger.signalrEvent('ReceiveAnswer', { sdpLength: sdp.length });
             callLogger.sdp('answer', 'received', 'current');
 
@@ -298,7 +363,7 @@ class SignalRService {
         });
 
         // 9. ReceiveIceCandidate
-        this.connection.on('ReceiveIceCandidate', (candidate: IceCandidatePayload) => {
+        register('ReceiveIceCandidate', (candidate: IceCandidatePayload) => {
             callLogger.signalrEvent('ReceiveIceCandidate', {
                 sdpMid: candidate.sdpMid,
                 sdpMLineIndex: candidate.sdpMLineIndex
@@ -313,7 +378,7 @@ class SignalRService {
             }
         });
 
-        callLogger.info('SignalR event handlers registered');
+        callLogger.info('SignalR event handlers registered (Case-Insensitive)');
     }
 }
 
