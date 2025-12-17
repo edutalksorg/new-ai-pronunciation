@@ -18,8 +18,10 @@ import {
 import type { RootState, AppDispatch } from '../store';
 import { logout } from '../store/authSlice';
 import { toggleTheme } from '../store/uiSlice';
+import { closeRatingModal } from '../store/callSlice';
 import OnlineStatusIndicator from './OnlineStatusIndicator';
 import TrialTimer from './TrialTimer';
+import CallRatingModal from './voice-call/CallRatingModal';
 import { useUsageLimits } from '../hooks/useUsageLimits';
 import { LanguageSelector } from './common/LanguageSelector';
 import { Logo } from './common/Logo';
@@ -35,6 +37,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
     const location = useLocation();
     const { user } = useSelector((state: RootState) => state.auth);
     const { theme } = useSelector((state: RootState) => state.ui);
+    const { showRatingModal, lastCompletedCall } = useSelector((state: RootState) => state.call);
 
     const [profileOpen, setProfileOpen] = useState(false);
     const profileRef = useRef<HTMLDivElement | null>(null);
@@ -201,6 +204,15 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
             <main className="flex-1 w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 overflow-x-hidden">
                 {children}
             </main>
+
+            {/* Call Rating Modal */}
+            {showRatingModal && lastCompletedCall && (
+                <CallRatingModal
+                    callId={lastCompletedCall.callId}
+                    partnerName={lastCompletedCall.partnerName}
+                    onClose={() => dispatch(closeRatingModal())}
+                />
+            )}
         </div>
     );
 };

@@ -212,6 +212,10 @@ export const useVoiceCall = () => {
 
             callLogger.info('Ending call', { callId: currentCall.callId, reason });
 
+            // Determine partner name before ending
+            const isIncoming = currentCall.calleeId === user?.id;
+            const partnerName = isIncoming ? currentCall.callerName : currentCall.calleeName;
+
             // 1. Call API to end call
             callLogger.apiCall('POST', `/calls/${currentCall.callId}/end`, reason);
             await callsService.end(currentCall.callId, reason);
@@ -221,8 +225,8 @@ export const useVoiceCall = () => {
             callLogger.signalrInvoke('LeaveCallSession', currentCall.callId);
             await signalRService.leaveCallSession(currentCall.callId);
 
-            // 3. Update Redux state
-            dispatch(endCallAction());
+            // 3. Update Redux state with partner name for rating modal
+            dispatch(endCallAction({ partnerName }));
             callLogger.stateTransition(callState, 'idle', currentCall.callId);
 
             callLogger.info('Call ended successfully', { callId: currentCall.callId });
@@ -232,7 +236,9 @@ export const useVoiceCall = () => {
             callLogger.error('Failed to end call properly', error);
 
             // End anyway to clean up state
-            dispatch(endCallAction());
+            const isIncoming = currentCall?.calleeId === user?.id;
+            const partnerName = isIncoming ? currentCall?.callerName : currentCall?.calleeName;
+            dispatch(endCallAction({ partnerName: partnerName || 'User' }));
 
             return { success: false, error: error?.message };
         }

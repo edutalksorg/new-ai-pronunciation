@@ -55,6 +55,10 @@ interface CallState {
   isMuted: boolean;
   isVideoEnabled: boolean; // Future proofing
   durationSeconds: number;
+
+  // Rating Modal State
+  lastCompletedCall: { callId: string; partnerName: string } | null;
+  showRatingModal: boolean;
 }
 
 const initialState: CallState = {
@@ -74,6 +78,9 @@ const initialState: CallState = {
   isMuted: false,
   isVideoEnabled: false,
   durationSeconds: 0,
+
+  lastCompletedCall: null,
+  showRatingModal: false,
 };
 
 export const callSlice = createSlice({
@@ -138,13 +145,28 @@ export const callSlice = createSlice({
     },
 
     // Cleanup
-    endCall: (state) => {
+    endCall: (state, action: PayloadAction<{ partnerName?: string } | undefined>) => {
+      // Save call info for rating modal before clearing
+      if (state.currentCall && state.durationSeconds > 0) {
+        const partnerName = action?.payload?.partnerName || 'User';
+
+        state.lastCompletedCall = {
+          callId: state.currentCall.callId,
+          partnerName: partnerName
+        };
+        state.showRatingModal = true;
+      }
+
       state.currentCall = null;
       state.isCallActive = false;
       state.callState = 'idle';
       state.incomingInvitation = null;
       state.durationSeconds = 0;
       state.isMuted = false;
+    },
+    closeRatingModal: (state) => {
+      state.showRatingModal = false;
+      state.lastCompletedCall = null;
     },
 
     // History
@@ -172,6 +194,7 @@ export const {
   setMuted,
   updateDuration,
   endCall,
+  closeRatingModal,
   addCallToHistory,
   setCallHistory,
 } = callSlice.actions;
