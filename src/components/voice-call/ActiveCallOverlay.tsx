@@ -22,8 +22,8 @@ const ActiveCallOverlay: React.FC = () => {
 
     const [showWarning, setShowWarning] = useState(false);
 
-    // Show overlay when connecting, active, or ringing (outgoing)
-    const shouldShow = ['connecting', 'active', 'ringing'].includes(callState) || isCallActive;
+    // Show overlay when connecting or active (NOT during ringing - CallingModal handles that)
+    const shouldShow = ['connecting', 'active'].includes(callState) || isCallActive;
 
     // Determine partner details
     const isIncoming = currentCall?.calleeId === user?.id;
