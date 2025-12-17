@@ -45,7 +45,7 @@ const DashboardCarousel: React.FC<DashboardCarouselProps> = ({
 
     return (
         <div
-            className="relative w-full max-w-full overflow-hidden rounded-xl md:rounded-2xl shadow-xl group h-[200px] sm:h-[240px] md:h-[280px] mb-6"
+            className="relative w-full max-w-full overflow-hidden rounded-xl md:rounded-2xl shadow-xl group h-[200px] sm:h-[240px] md:h-[280px] mb-6 scrollbar-hide"
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
         >
@@ -85,17 +85,17 @@ const DashboardCarousel: React.FC<DashboardCarouselProps> = ({
                 ))}
             </div>
 
-            {/* Navigation Buttons */}
+            {/* Navigation Buttons - Hidden on mobile, visible on hover on desktop */}
             <button
                 onClick={prevSlide}
-                className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-1.5 md:p-2 rounded-full backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 shadow-lg border border-white/10"
+                className="hidden md:block absolute left-2 md:left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-1.5 md:p-2 rounded-full backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 shadow-lg border border-white/10"
                 aria-label="Previous slide"
             >
                 <ChevronLeft size={18} className="md:w-5 md:h-5" />
             </button>
             <button
                 onClick={nextSlide}
-                className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-1.5 md:p-2 rounded-full backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 shadow-lg border border-white/10"
+                className="hidden md:block absolute right-2 md:right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-1.5 md:p-2 rounded-full backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 shadow-lg border border-white/10"
                 aria-label="Next slide"
             >
                 <ChevronRight size={18} className="md:w-5 md:h-5" />
@@ -107,10 +107,11 @@ const DashboardCarousel: React.FC<DashboardCarouselProps> = ({
                     <button
                         key={index}
                         onClick={() => goToSlide(index)}
-                        className={`h-1.5 rounded-full transition-all duration-300 shadow-sm ${index === currentIndex
-                            ? 'bg-white w-8'
-                            : 'bg-white/40 hover:bg-white/60 w-1.5'
+                        className={`w-2 h-2 rounded-full transition-all duration-300 flex-shrink-0 block ${index === currentIndex
+                            ? 'bg-white opacity-100'
+                            : 'bg-white/50 hover:bg-white/70'
                             }`}
+                        style={{ aspectRatio: '1/1', minWidth: '8px', minHeight: '8px' }}
                         aria-label={`Go to slide ${index + 1}`}
                     />
                 ))}

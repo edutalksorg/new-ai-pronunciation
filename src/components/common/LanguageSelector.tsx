@@ -73,8 +73,9 @@ export const LanguageSelector: React.FC = () => {
                 aria-expanded={isOpen}
                 aria-label="Select Language"
             >
-                {/* Show Flags: English + Selected (if different) */}
-                <span className="flex items-center text-xl leading-none">
+                {/* Mobile: Globe icon, Desktop: Flags */}
+                <Globe size={20} className="sm:hidden text-slate-600 dark:text-slate-400" />
+                <span className="hidden sm:flex items-center text-xl leading-none">
                     {selectedLanguage.code !== 'English' && (
                         <>
                             <span>🇬🇧</span>
@@ -84,7 +85,7 @@ export const LanguageSelector: React.FC = () => {
                     <span>{selectedLanguage.flag}</span>
                 </span>
 
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                <span className="hidden sm:inline text-sm font-medium text-slate-700 dark:text-slate-200">
                     {buttonLabel}
                 </span>
 
