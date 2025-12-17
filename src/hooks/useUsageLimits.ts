@@ -27,7 +27,7 @@ export const useUsageLimits = () => {
 
     // Check for active status or valid paid plan that isn't explicitly expired
     const isActiveStatus = status === 'active' || status === 'trialing' || status === 'succeeded';
-    const isPaidPlan = ['basic', 'premium', 'yearly', 'pro', 'monthly', 'annual', 'month', 'year'].some(p => plan.includes(p));
+    const isPaidPlan = ['basic', 'premium', 'yearly', 'pro', 'monthly', 'annual', 'month', 'year', 'quarterly', 'quarter'].some(p => plan.includes(p));
 
     // STRICT: If status is explicitly cancelled, we treat it as revoked access immediately 
     // (per user request: "if he cancels before 24hrs also it has to locked")

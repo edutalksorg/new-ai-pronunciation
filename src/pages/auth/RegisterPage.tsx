@@ -306,38 +306,12 @@ const RegisterPage: React.FC = () => {
               <label className="block text-sm font-medium text-slate-900 dark:text-white mb-2">
                 Referral Code (Optional)
               </label>
-              <div className="flex gap-2">
-                <input
-                  {...register('referralCode')}
-                  type="text"
-                  placeholder="REFER2025"
-                  className="flex-1 px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const code = document.querySelector<HTMLInputElement>('input[name="referralCode"]')?.value;
-                    if (!code) return;
-                    try {
-                      const res = await import('../../services/referrals').then(m => m.referralsService.validateCode(code));
-                      // Adjust check based on API response structure.
-                      // Usually validate returns { data: true/false } or throws 404
-                      const isValid = (res as any)?.data === true || (res as any)?.success === true;
-
-                      if (isValid) {
-                        dispatch(showToast({ message: 'Referral code is valid!', type: 'success' }));
-                      } else {
-                        dispatch(showToast({ message: 'Invalid referral code', type: 'error' }));
-                      }
-                    } catch (err) {
-                      dispatch(showToast({ message: 'Invalid or expired referral code', type: 'error' }));
-                    }
-                  }}
-                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-sm font-medium transition-colors"
-                >
-                  Check
-                </button>
-              </div>
+              <input
+                {...register('referralCode')}
+                type="text"
+                placeholder="REFER2025"
+                className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
             </div>
 
             {/* Password */}

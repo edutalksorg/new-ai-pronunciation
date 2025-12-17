@@ -9,13 +9,15 @@ interface TrialTimerProps {
     hasActiveSubscription: boolean;
     isFreeTrial?: boolean;
     onUpgrade?: () => void;
+    planName?: string;
 }
 
 const TrialTimer: React.FC<TrialTimerProps> = ({
     trialExpiresAt,
     hasActiveSubscription,
     isFreeTrial,
-    onUpgrade
+    onUpgrade,
+    planName
 }) => {
     const navigate = useNavigate();
     const { isLoading } = useSelector((state: RootState) => state.auth);
@@ -39,11 +41,32 @@ const TrialTimer: React.FC<TrialTimerProps> = ({
                 return;
             }
 
-            const hours = Math.floor(diffMs / (1000 * 60 * 60));
-            const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+            // Check if this is a paid plan (Monthly, Quarterly, Yearly)
+            const isPaidPlan = planName && (
+                planName.toLowerCase().includes('monthly') ||
+                planName.toLowerCase().includes('quarterly') ||
+                planName.toLowerCase().includes('yearly') ||
+                planName.toLowerCase().includes('year')
+            );
 
-            setTimeRemaining(`${hours}h ${minutes}m ${seconds}s`);
+            if (isPaidPlan) {
+                // For paid plans, show days countdown
+                const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+                if (days > 0) {
+                    setTimeRemaining(`${days} day${days !== 1 ? 's' : ''}`);
+                } else {
+                    setTimeRemaining(`${hours} hour${hours !== 1 ? 's' : ''}`);
+                }
+            } else {
+                // For free trial, show hours/minutes/seconds countdown
+                const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+
+                setTimeRemaining(`${hours}h ${minutes}m ${seconds}s`);
+            }
             setIsExpired(false);
         };
 
@@ -54,7 +77,7 @@ const TrialTimer: React.FC<TrialTimerProps> = ({
         const interval = setInterval(calculateTimeRemaining, 1000);
 
         return () => clearInterval(interval);
-    }, [trialExpiresAt, hasActiveSubscription]);
+    }, [trialExpiresAt, hasActiveSubscription, planName]);
 
     // Don't show timer for paid subscribers
     if (hasActiveSubscription) {
@@ -69,6 +92,27 @@ const TrialTimer: React.FC<TrialTimerProps> = ({
         return null; // Don't show if no trial data
     }
 
+    // Check if this is a paid plan
+    const isPaidPlan = planName && (
+        planName.toLowerCase().includes('monthly') ||
+        planName.toLowerCase().includes('quarterly') ||
+        planName.toLowerCase().includes('yearly') ||
+        planName.toLowerCase().includes('year')
+    );
+
+    // For paid plans, only show timer when 5 days or less remain
+    if (isPaidPlan && !isExpired) {
+        const now = new Date();
+        const expiresAt = new Date(trialExpiresAt);
+        const diffMs = expiresAt.getTime() - now.getTime();
+        const daysRemaining = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+        // Hide timer if more than 5 days remain
+        if (daysRemaining > 5) {
+            return null;
+        }
+    }
+
     return (
         <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border bg-opacity-10 dark:bg-opacity-20 ${isExpired
             ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
@@ -77,7 +121,7 @@ const TrialTimer: React.FC<TrialTimerProps> = ({
             <Clock className="w-4 h-4 text-red-600 dark:text-red-400" />
             <div className="flex flex-col">
                 <span className="text-xs font-medium text-red-900 dark:text-red-200">
-                    {isExpired ? 'Trial Expired' : `Free Trial: Expires ${new Date(trialExpiresAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}`}
+                    {isExpired ? 'Trial Expired' : `${planName || 'Free Trial'}: Expires ${new Date(trialExpiresAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}`}
                 </span>
                 <span className="text-xs tabular-nums text-red-700 dark:text-red-300">
                     {isExpired ? (

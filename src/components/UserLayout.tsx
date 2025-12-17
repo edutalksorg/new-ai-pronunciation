@@ -121,6 +121,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
                                     hasActiveSubscription={hasActiveSubscription}
                                     isFreeTrial={isFreeTrial}
                                     onUpgrade={triggerUpgradeModal}
+                                    planName={user?.subscriptionPlan}
                                 />
                             )}
 
