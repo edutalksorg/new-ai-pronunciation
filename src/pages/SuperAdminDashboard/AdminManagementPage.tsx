@@ -36,13 +36,16 @@ const AdminManagementPage: React.FC = () => {
         email: '',
         password: '',
         confirmPassword: '',
-        role: 'admin'
+        role: 'admin',
+        phoneNumber: '',
     });
 
     // Permission Selection State: Set of Permission Names
     const [selectedPermissions, setSelectedPermissions] = useState<Set<string>>(new Set());
     // For Edit Mode: Keep track of original permissions to calculate diff
     const [originalPermissions, setOriginalPermissions] = useState<Set<string>>(new Set());
+
+
 
     useEffect(() => {
         loadData();
@@ -51,12 +54,26 @@ const AdminManagementPage: React.FC = () => {
     const loadData = async () => {
         try {
             setLoading(true);
-            const [adminsData, permsData] = await Promise.all([
-                adminService.getAdmins(),
+
+            // Fetch ALL users to debug and filter client-side
+            // We use the same method AdminDashboard uses to ensure consistency
+            const [usersRes, permsData] = await Promise.all([
+                adminService.getAllUsers(1000, 1),
                 permissionService.getAllPermissions()
             ]);
 
-            setAdmins(adminsData);
+            const responseData = (usersRes as any)?.data || usersRes;
+            const allUsers = Array.isArray(responseData) ? responseData : responseData?.items || [];
+
+
+
+            // Filter Admins
+            const filteredAdmins = allUsers.filter((u: any) => {
+                const r = String(u.role || '').toLowerCase().trim();
+                return r.includes('admin') && !r.includes('super');
+            });
+
+            setAdmins(filteredAdmins);
 
             const perms = (permsData as any)?.data || permsData || [];
             if (Array.isArray(perms)) {
@@ -79,7 +96,7 @@ const AdminManagementPage: React.FC = () => {
     const handleOpenCreate = () => {
         setMode('create');
         setSelectedAdminId(null);
-        setFormData({ fullName: '', email: '', password: '', confirmPassword: '', role: 'admin' });
+        setFormData({ fullName: '', email: '', password: '', confirmPassword: '', role: 'admin', phoneNumber: '' });
         setSelectedPermissions(new Set());
         setOriginalPermissions(new Set());
         setIsModalOpen(true);
@@ -94,18 +111,31 @@ const AdminManagementPage: React.FC = () => {
             email: admin.email,
             password: '',
             confirmPassword: '',
-            role: 'admin'
+            role: 'admin',
+            phoneNumber: admin.phoneNumber || ''
         });
 
         // Fetch current user permissions
         try {
             const res = await permissionService.getUserPermissions(admin.id);
             const data = (res as any)?.data || res;
-            const effective = data.effectivePermissions || [];
 
-            const permSet = new Set<string>(effective);
-            setSelectedPermissions(permSet);
-            setOriginalPermissions(new Set(effective)); // Clone for diffing later
+            // Robustly extract all permissions the user currently holds
+            // "effectivePermissions" should be the ground truth, but we fallback/merge just in case
+            const effective = data.effectivePermissions || [];
+            const granted = data.grantedPermissions || [];
+            const rolePerms = data.rolePermissions || [];
+            const direct = data.permissions || []; // legacy or other endpoint
+
+            // Combine all to be safe, though effectivePermissions *should* cover it.
+            // Using a Set to dedup.
+            const allActiveFn = new Set([...effective, ...granted, ...rolePerms, ...direct]);
+
+            // We also need to respect revocations if the API returns them, but typically effectivePermissions excludes them.
+            // The UI state `selectedPermissions` represents what is CHECKED.
+
+            setSelectedPermissions(allActiveFn);
+            setOriginalPermissions(new Set(allActiveFn)); // Clone for diffing later
 
             setIsModalOpen(true);
         } catch (err) {
@@ -149,24 +179,37 @@ const AdminManagementPage: React.FC = () => {
                     throw new Error("Passwords do not match");
                 }
 
-                console.log('Creating Admin Account (Step 1: Register User)');
-                const regRes = await authService.register({
-                    fullName: formData.fullName,
-                    email: formData.email,
-                    password: formData.password,
-                    confirmPassword: formData.confirmPassword,
-                    role: 'user'
-                });
+                console.log('Creating Admin Account (Step 1: Create User via Admin API)');
 
-                const newUser = (regRes as any)?.data?.user || (regRes as any)?.user || (regRes as any)?.data;
-                const newUserId = newUser?.id || newUser?.userId;
+                // Construct payload matchnig:
+                // { "userName": "...", "password": "...", "email": "...", "phoneNumber": "...", "fullName": "...", "role": "Admin" }
+                // We'll use email as username for simplicity or derive it.
+                // Let's assume username = email prefix or just email.
+
+                const payload = {
+                    userName: formData.email.split('@')[0], // Simple username derivation
+                    password: formData.password,
+                    email: formData.email,
+                    phoneNumber: formData.phoneNumber,
+                    fullName: formData.fullName,
+                    role: "Admin"
+                };
+
+                const createRes = await adminService.createUser(payload);
+                const createData = (createRes as any)?.data || createRes;
+
+                // The reponse might be a simple ID string or object
+                // Based on curl response: "data": "019b301a-2455-7990-a7b7-8f421c289b12"
+
+                const newUserId = typeof createData === 'string' ? createData : (createData?.id || createData?.userId);
 
                 if (!newUserId) throw new Error('Could not retrieve new User ID');
 
-                console.log('Promoting to Admin (Step 2: Update Role)', newUserId);
+                console.log('Promoting to Admin (Step 2: Force Update Role)', newUserId);
+                // Explicitly update role to Admin to ensure it persists, as create might default to User
                 await adminService.updateUser(newUserId, { role: 'Admin' });
 
-                console.log('Granting Permissions (Step 3: Bulk Grant)');
+                console.log('Granting Permissions (Step 3: Bulk Grant)', newUserId);
                 const permsToGrant = Array.from(selectedPermissions);
                 if (permsToGrant.length > 0) {
                     await permissionService.updateUserPermissions(newUserId, permsToGrant, []);
@@ -199,7 +242,21 @@ const AdminManagementPage: React.FC = () => {
             loadData(); // Refresh list
         } catch (err: any) {
             console.error('Error saving admin:', err);
-            const msg = err.response?.data?.message || err.message || 'Failed to save';
+
+            // Extract validation errors
+            let msg = 'Failed to save';
+            const errorData = err.response?.data || err;
+            const validationErrors = errorData.errors || errorData.messages;
+
+            if (Array.isArray(validationErrors) && validationErrors.length > 0) {
+                // If it's an array of strings
+                msg = validationErrors.join('\n');
+            } else if (typeof validationErrors === 'string') {
+                msg = validationErrors;
+            } else if (err.message) {
+                msg = err.message;
+            }
+
             alert(`Failed: ${msg}`);
         } finally {
             setSaving(false);
@@ -281,6 +338,8 @@ const AdminManagementPage: React.FC = () => {
                 </div>
             </div>
 
+
+
             {/* Create/Edit Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
@@ -316,6 +375,17 @@ const AdminManagementPage: React.FC = () => {
                                                 required
                                                 value={formData.fullName}
                                                 onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                                                disabled={mode === 'edit'}
+                                                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none disabled:opacity-50"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Phone Number</label>
+                                            <input
+                                                type="text"
+                                                required
+                                                value={formData.phoneNumber}
+                                                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
                                                 disabled={mode === 'edit'}
                                                 className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none disabled:opacity-50"
                                             />

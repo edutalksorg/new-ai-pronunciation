@@ -63,7 +63,7 @@ export const permissionService = {
 
     updateRolePermissions: async (roleId: string, permissionNames: string[]) => {
         return apiService.put(`/permission-management/roles/${roleId}`, {
-            roleId,
+            roleName: roleId,
             permissionNames
         });
     }

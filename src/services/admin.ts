@@ -133,15 +133,30 @@ export const adminService = {
   // Admin Management
   getAdmins: async () => {
     try {
-      const res = await apiService.get('/users?PageSize=100&Page=1');
+      // Increased page size to ensure we catch the new admin if they are created recently
+      const res = await apiService.get('/users?PageSize=1000&Page=1');
       const responseData = (res as any)?.data || res;
       const allUsers = Array.isArray(responseData) ? responseData : responseData?.items || [];
-      return allUsers.filter((u: any) => String(u.role).toLowerCase() === 'admin');
+
+      console.log('getAdmins: Fetched users', allUsers.length);
+
+      const admins = allUsers.filter((u: any) => {
+        const role = String(u.role || '').toLowerCase();
+        // Log roles for debugging if needed (can be removed later)
+        // console.log(`User ${u.email} has role: ${role}`); 
+        return role === 'admin';
+      });
+
+      console.log('getAdmins: Filtered admins', admins.length);
+      return admins;
     } catch (err) {
       console.error('Error fetching admins:', err);
       return [];
     }
   },
+
+  createUser: async (data: any) =>
+    apiService.post('/users', data),
 
   createAdmin: async (data: any) =>
     apiService.post('/admin/create-admin', data),

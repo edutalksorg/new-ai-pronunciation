@@ -24,6 +24,8 @@ import AdminSubscriptionsPage from './pages/AdminDashboard/AdminSubscriptionsPag
 import SuperAdminDashboardPage from './pages/SuperAdminDashboard/SuperAdminDashboardPage';
 import PermissionManagementPage from './pages/SuperAdminDashboard/PermissionManagementPage';
 import RoleManagementPage from './pages/SuperAdminDashboard/RoleManagementPage';
+import RoleDefinitionsPage from './pages/SuperAdminDashboard/RoleDefinitionsPage';
+import AllUsersPage from './pages/SuperAdminDashboard/AllUsersPage';
 import AdminManagementPage from './pages/SuperAdminDashboard/AdminManagementPage';
 import DashboardPage from './pages/UserDashboard/DashboardPage';
 import ProfilePage from './pages/UserDashboard/ProfilePage';
@@ -370,6 +372,26 @@ function App() {
             <ProtectedRoute>
               <RoleBasedRoute allowedRoles={['superadmin']}>
                 <RoleManagementPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/super-admin/role-definitions"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['superadmin']}>
+                <RoleDefinitionsPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/super-admin/users"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['superadmin']}>
+                <AllUsersPage />
               </RoleBasedRoute>
             </ProtectedRoute>
           }

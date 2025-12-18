@@ -21,11 +21,15 @@ const SuperAdminDashboardPage: React.FC = () => {
         try {
             setLoading(true);
             // Reusing admin service to get some base stats
-            // Ideally we'd have dedicated super admin stats endpoints
             const admins = await adminService.getAdmins();
-            // This is a bit heavy, strictly for demo/initial impl
-            const usersRes = await adminService.getAllUsers(1, 1);
-            const totalUsers = (usersRes as any).totalCount || 0;
+
+            // Fetch users to get total count
+            // Fetching a larger page to ensure we get a count if totalCount metadata is missing
+            const usersRes = await adminService.getAllUsers(1000, 1);
+            const data = (usersRes as any)?.data || usersRes;
+            const items = Array.isArray(data) ? data : (data?.items || []);
+            // Use metadata totalCount if available, otherwise fallback to array length
+            const totalUsers = data?.totalCount || items.length || 0;
 
             setStats({
                 totalAdmins: admins.length,
@@ -75,7 +79,7 @@ const SuperAdminDashboardPage: React.FC = () => {
                     value={loading ? "..." : stats.totalUsers}
                     icon={<Users className="text-blue-600" size={24} />}
                     color="bg-blue-600"
-                    onClick={() => navigate('/admin')} // Redirect to regular admin user list for now
+                    onClick={() => navigate('/super-admin/users')}
                 />
                 <StatCard
                     title="Permission Nodes"

@@ -54,8 +54,10 @@ const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({ children }) => {
 
     const menuItems = [
         { icon: <Shield size={20} />, label: 'Dashboard', path: '/super-admin' },
+        { icon: <Settings size={20} />, label: 'Role Definitions', path: '/super-admin/role-definitions' },
+        { icon: <UserCog size={20} />, label: 'User Overrides', path: '/super-admin/roles' },
         { icon: <Key size={20} />, label: 'Permissions', path: '/super-admin/permissions' },
-        { icon: <UserCog size={20} />, label: 'Roles', path: '/super-admin/roles' },
+        { icon: <Users size={20} />, label: 'All Users', path: '/super-admin/users' },
         { icon: <Users size={20} />, label: 'Admins', path: '/super-admin/admins' },
         // Add more Super Admin specific items here
     ];

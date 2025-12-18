@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Loader, Filter, User, Edit, Save, X, RotateCcw } from 'lucide-react';
+import { Search, Loader, Filter, User, RotateCcw, Check, X, Shield, AlertCircle } from 'lucide-react';
 import SuperAdminLayout from '../../components/SuperAdminLayout';
 import { adminService } from '../../services/admin';
-import { permissionService, UserPermissions } from '../../services/permissionService';
+import { permissionService, UserPermissions, Permission } from '../../services/permissionService';
 import Button from '../../components/Button';
 
 const RoleManagementPage: React.FC = () => {
@@ -12,9 +12,12 @@ const RoleManagementPage: React.FC = () => {
     const [selectedUser, setSelectedUser] = useState<string | null>(null);
     const [userPermissions, setUserPermissions] = useState<UserPermissions | null>(null);
     const [loadingPermissions, setLoadingPermissions] = useState(false);
-    const [allPermissions, setAllPermissions] = useState<any[]>([]);
+    const [allPermissions, setAllPermissions] = useState<Permission[]>([]);
+    const [updating, setUpdating] = useState<string | null>(null);
 
-    const [searchTerm, setSearchTerm] = useState('');
+    const [userSearchTerm, setUserSearchTerm] = useState('');
+    const [permSearchTerm, setPermSearchTerm] = useState('');
+    const [moduleFilter, setModuleFilter] = useState('all');
 
     useEffect(() => {
         loadUsers();
@@ -24,10 +27,33 @@ const RoleManagementPage: React.FC = () => {
     const loadUsers = async () => {
         try {
             setLoadingUsers(true);
-            const res = await adminService.getAllUsers(20, 1);
-            const data = (res as any)?.data || res;
-            const items = Array.isArray(data) ? data : data?.items || [];
-            setUsers(items);
+            let allItems: any[] = [];
+            let page = 1;
+            const pageSize = 100;
+            let hasMore = true;
+
+            while (hasMore) {
+                const res = await adminService.getAllUsers(pageSize, page);
+                const data = (res as any)?.data || res;
+                const items = Array.isArray(data) ? data : data?.items || [];
+
+                if (items.length === 0) {
+                    hasMore = false;
+                } else {
+                    allItems = [...allItems, ...items];
+                    if (items.length < pageSize) hasMore = false;
+                    else page++;
+                }
+                if (page > 50) hasMore = false;
+            }
+
+            // Filter out SuperAdmin
+            const filteredUsers = allItems.filter((u: any) => {
+                const r = String(u.role || '').toLowerCase();
+                return !r.includes('superadmin') && !r.includes('super admin');
+            });
+
+            setUsers(filteredUsers);
         } catch (error) {
             console.error("Failed to load users", error);
         } finally {
@@ -50,9 +76,34 @@ const RoleManagementPage: React.FC = () => {
         try {
             setLoadingPermissions(true);
             const res = await permissionService.getUserPermissions(userId);
-            // API might return { data: ... } or just ...
-            const data = (res as any)?.data || res;
-            console.log('User Permissions Data:', data);
+            let data = (res as any)?.data || res;
+
+            // FALLBACK: If rolePermissions is missing aka backend didn't expand it,
+            // we manually fetch the role definitions to ensure UI shows "Role Default" correctly.
+            if (!data.rolePermissions || data.rolePermissions.length === 0) {
+                // Find user's role from the list
+                const user = users.find(u => u.id === userId);
+                let roleName = data.role || user?.role || '';
+
+                // Normalize to Title Case (Admin, Instructor, User) as expected by RoleDefinitions
+                if (roleName) {
+                    roleName = roleName.charAt(0).toUpperCase() + roleName.slice(1).toLowerCase();
+
+                    try {
+                        const roleRes = await permissionService.getRolePermissions(roleName);
+                        const roleData = (roleRes as any)?.data || roleRes;
+                        const fetchedRolePerms = Array.isArray(roleData.permissions) ? roleData.permissions : (Array.isArray(roleData) ? roleData : []);
+
+                        if (fetchedRolePerms.length > 0) {
+                            // console.log('Manually fetched role permissions for', roleName, fetchedRolePerms.length);
+                            data = { ...data, rolePermissions: fetchedRolePerms };
+                        }
+                    } catch (err) {
+                        console.warn('Fallback fetch for role permissions failed', err);
+                    }
+                }
+            }
+
             setUserPermissions(data);
         } catch (error) {
             console.error("Failed to load user permissions", error);
@@ -61,63 +112,82 @@ const RoleManagementPage: React.FC = () => {
         }
     };
 
-    const handleGrant = async (permissionName: string) => {
-        if (!selectedUser) return;
+    const handlePermissionChange = async (permName: string, action: 'GRANT' | 'REVOKE' | 'RESET') => {
+        if (!selectedUser || !userPermissions) return;
+
         try {
-            await permissionService.grantUserPermission(selectedUser, permissionName);
-            // Reload
+            setUpdating(permName);
+
+            // Calculate new arrays
+            let newGranted = [...(userPermissions.grantedPermissions || [])];
+            let newRevoked = [...(userPermissions.revokedPermissions || [])];
+
+            // Helper to remove
+            const remove = (arr: string[], val: string) => arr.filter(p => p !== val);
+            const add = (arr: string[], val: string) => [...new Set([...arr, val])]; // ensure unique
+
+            if (action === 'GRANT') {
+                newGranted = add(newGranted, permName);
+                newRevoked = remove(newRevoked, permName);
+            } else if (action === 'REVOKE') {
+                newRevoked = add(newRevoked, permName);
+                newGranted = remove(newGranted, permName);
+            } else if (action === 'RESET') {
+                newGranted = remove(newGranted, permName);
+                newRevoked = remove(newRevoked, permName);
+            }
+
+            // Call API
+            await permissionService.updateUserPermissions(selectedUser, newGranted, newRevoked);
+
+            // Reload to get updated effective permissions
             handleUserSelect(selectedUser);
+
         } catch (e) {
             console.error(e);
-            alert('Failed to grant permission');
+            alert('Failed to update permission');
+        } finally {
+            setUpdating(null);
         }
     };
 
-    const handleRevoke = async (permissionName: string) => {
+    const handleResetAll = async () => {
         if (!selectedUser) return;
-        try {
-            await permissionService.revokeUserPermission(selectedUser, permissionName);
-            // Reload
-            handleUserSelect(selectedUser);
-        } catch (e) {
-            console.error(e);
-            alert('Failed to revoke permission');
-        }
-    };
-
-    const handleReset = async () => {
-        if (!selectedUser) return;
-        if (!confirm('Are you sure you want to reset all custom permissions for this user? They will revert to default role permissions.')) return;
-
+        if (!confirm('Are you sure? This will reset all custom permissions for this user.')) return;
         try {
             await permissionService.resetUserPermissions(selectedUser);
-            // Reload
             handleUserSelect(selectedUser);
-        } catch (e) {
-            console.error(e);
-            alert('Failed to reset permissions');
-        }
-    }
+        } catch (e) { console.error(e); }
+    };
+
+    // Filter Logic
+    const modules = Array.from(new Set(allPermissions.map(p => p.module))).sort();
+
+    const filteredPerms = allPermissions.filter(p => {
+        if (moduleFilter !== 'all' && p.module !== moduleFilter) return false;
+        if (permSearchTerm && !p.name.toLowerCase().includes(permSearchTerm.toLowerCase()) && !p.displayName.toLowerCase().includes(permSearchTerm.toLowerCase())) return false;
+        return true;
+    });
 
     return (
         <SuperAdminLayout>
-            <div className="mb-8">
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Role & Permission Assignment</h1>
-                <p className="text-slate-600 dark:text-slate-400">Manage individual user permissions overrides</p>
+            <div className="mb-6">
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">User Permission Overrides</h1>
+                <p className="text-slate-600 dark:text-slate-400">Manage fine-grained permission exceptions for individual users.</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* User List Column */}
-                <div className="lg:col-span-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col h-[calc(100vh-200px)]">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-180px)]">
+                {/* User List */}
+                <div className="lg:col-span-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden">
                     <div className="p-4 border-b border-slate-200 dark:border-slate-800">
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                             <input
                                 type="text"
                                 placeholder="Find user..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-none rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+                                value={userSearchTerm}
+                                onChange={(e) => setUserSearchTerm(e.target.value)}
+                                className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-none rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
                             />
                         </div>
                     </div>
@@ -126,32 +196,20 @@ const RoleManagementPage: React.FC = () => {
                             <div className="flex justify-center p-4"><Loader className="animate-spin text-indigo-500" /></div>
                         ) : (
                             users
-                                .filter(u => u.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) || u.email?.toLowerCase().includes(searchTerm.toLowerCase()))
+                                .filter(u => u.fullName?.toLowerCase().includes(userSearchTerm.toLowerCase()) || u.email?.toLowerCase().includes(userSearchTerm.toLowerCase()))
                                 .map(user => (
                                     <button
                                         key={user.id}
                                         onClick={() => handleUserSelect(user.id)}
                                         className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left
-                                        ${selectedUser === user.id
-                                                ? 'bg-indigo-50 dark:bg-indigo-900/30 border-l-4 border-indigo-600'
-                                                : 'hover:bg-slate-50 dark:hover:bg-slate-800 border-l-4 border-transparent'
-                                            }`}
+                                        ${selectedUser === user.id ? 'bg-indigo-50 dark:bg-indigo-900/30 border-l-4 border-indigo-600' : 'hover:bg-slate-50 dark:hover:bg-slate-800 border-l-4 border-transparent'}`}
                                     >
-                                        <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
-                                            {user.avatar ? (
-                                                <img src={user.avatar} className="w-10 h-10 rounded-full" alt="avatar" />
-                                            ) : (
-                                                <span className="font-bold text-slate-500 text-sm">{user.fullName?.charAt(0)}</span>
-                                            )}
+                                        <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0 text-xs font-bold text-slate-500">
+                                            {user.avatar ? <img src={user.avatar} className="w-8 h-8 rounded-full" /> : user.fullName?.charAt(0)}
                                         </div>
                                         <div className="min-w-0">
-                                            <p className="font-medium text-slate-900 dark:text-white truncate">{user.fullName}</p>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xs text-slate-500 truncate">{user.email}</span>
-                                                <span className="px-1.5 py-0.5 rounded text-[10px] uppercase font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                                                    {user.role}
-                                                </span>
-                                            </div>
+                                            <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{user.fullName}</p>
+                                            <p className="text-xs text-slate-500 truncate">{user.role}</p>
                                         </div>
                                     </button>
                                 ))
@@ -159,137 +217,136 @@ const RoleManagementPage: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Permission Editor Column */}
-                <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col h-[calc(100vh-200px)]">
+                {/* Permission Matrix */}
+                <div className="lg:col-span-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden">
                     {!selectedUser ? (
-                        <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 text-center">
+                        <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
                             <User size={48} className="mb-4 opacity-50" />
-                            <p>Select a user from the list to manage their permissions</p>
+                            <p>Select a user to manage permissions</p>
                         </div>
-                    ) : loadingPermissions ? (
-                        <div className="flex-1 flex items-center justify-center">
-                            <Loader className="animate-spin text-indigo-600" size={32} />
-                        </div>
-                    ) : userPermissions ? (
+                    ) : loadingPermissions || !userPermissions ? (
+                        <div className="flex-1 flex items-center justify-center"><Loader className="animate-spin text-indigo-600" size={32} /></div>
+                    ) : (
                         <>
-                            <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-start">
+                            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
                                 <div>
-                                    <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                    <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                         {userPermissions.fullName}
-                                        <span className="text-sm font-normal text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full">
-                                            {userPermissions.role}
-                                        </span>
+                                        <span className="text-xs bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-full uppercase">{userPermissions.role}</span>
                                     </h2>
-                                    <p className="text-sm text-slate-500 mt-1">
-                                        Manage specific grants and revocations. Effective permissions are derived from Role + Granted - Revoked.
-                                    </p>
                                 </div>
-                                <Button variant="secondary" onClick={handleReset} leftIcon={<RotateCcw size={16} />}>
-                                    Reset to Defaults
-                                </Button>
+                                <Button variant="secondary" size="sm" onClick={handleResetAll} leftIcon={<RotateCcw size={14} />}>Reset All Overrides</Button>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto p-6">
-                                {/* Create two lists: Available to Grant, and Granted/Effective */}
-                                <div className="space-y-8">
-
-                                    {/* Effective Permissions (Read Only view) */}
-                                    <div>
-                                        <h3 className="font-semibold text-sm uppercase tracking-wider text-slate-500 mb-3">Effective Permissions</h3>
-                                        <div className="flex flex-wrap gap-2">
-                                            {userPermissions.effectivePermissions?.map(p => (
-                                                <span key={p} className="px-3 py-1 rounded-full text-sm bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800">
-                                                    {p}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Categorized Management */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-
-                                        {/* Direct Grants */}
-                                        <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800">
-                                            <h3 className="font-bold text-blue-900 dark:text-blue-200 mb-4">Directly Granted</h3>
-                                            <div className="space-y-2">
-                                                {userPermissions.grantedPermissions?.length > 0 ? userPermissions.grantedPermissions.map(p => (
-                                                    <div key={p} className="flex justify-between items-center bg-white dark:bg-slate-800 p-2 rounded shadow-sm">
-                                                        <span className="text-sm font-medium">{p}</span>
-                                                        <button
-                                                            onClick={() => handleRevoke(p)}
-                                                            className="text-red-500 hover:text-red-700 p-1"
-                                                            title="Remove grant (this will not necessarily revoke if role has it)"
-                                                        >
-                                                            <X size={16} />
-                                                        </button>
-                                                    </div>
-                                                )) : <p className="text-sm text-slate-500 italic">No direct grants.</p>}
-                                            </div>
-
-                                            <div className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800">
-                                                <h4 className="text-xs font-bold text-blue-700 uppercase mb-2">Add Grant</h4>
-                                                <select
-                                                    className="w-full p-2 rounded border border-slate-300 dark:border-slate-600 text-sm"
-                                                    onChange={(e) => {
-                                                        if (e.target.value) handleGrant(e.target.value);
-                                                    }}
-                                                    value=""
-                                                >
-                                                    <option value="">Select permission to grant...</option>
-                                                    {allPermissions
-                                                        .filter(ap => !userPermissions.grantedPermissions?.includes(ap.name))
-                                                        .map(ap => (
-                                                            <option key={ap.id} value={ap.name}>{ap.name} ({ap.displayName})</option>
-                                                        ))}
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        {/* Direct Revocations */}
-                                        <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-800">
-                                            <h3 className="font-bold text-red-900 dark:text-red-200 mb-4">Explicitly Revoked</h3>
-                                            <div className="space-y-2">
-                                                {userPermissions.revokedPermissions?.length > 0 ? userPermissions.revokedPermissions.map(p => (
-                                                    <div key={p} className="flex justify-between items-center bg-white dark:bg-slate-800 p-2 rounded shadow-sm">
-                                                        <span className="text-sm font-medium">{p}</span>
-                                                        <button
-                                                            onClick={() => handleGrant(p)} // Granting a revoked permission effectively removes the revocation if we implement it that way, but let's assume we just want to remove the revocation entry. The API might handle this weirdly, but usually "granting" clears revocation or we need a "remove revocation" API. 
-                                                            // BUT: The API defined has Grant and Revoke. It doesn't have "Clear".
-                                                            // Usually Granting a Revoked permission -> becomes Granted (or effective).
-                                                            // For this UI, let's assume Granting it back fixes it.
-                                                            className="text-green-500 hover:text-green-700 p-1"
-                                                            title="Remove revocation"
-                                                        >
-                                                            <X size={16} />
-                                                        </button>
-                                                    </div>
-                                                )) : <p className="text-sm text-slate-500 italic">No explicit revocations.</p>}
-                                            </div>
-
-                                            <div className="mt-4 pt-4 border-t border-red-200 dark:border-red-800">
-                                                <h4 className="text-xs font-bold text-red-700 uppercase mb-2">Revoke Permission</h4>
-                                                <select
-                                                    className="w-full p-2 rounded border border-slate-300 dark:border-slate-600 text-sm"
-                                                    onChange={(e) => {
-                                                        if (e.target.value) handleRevoke(e.target.value);
-                                                    }}
-                                                    value=""
-                                                >
-                                                    <option value="">Select permission to revoke...</option>
-                                                    {/* Can revoke anything effectively possessed */}
-                                                    {userPermissions.effectivePermissions?.map(p => (
-                                                        <option key={p} value={p}>{p}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                    </div>
+                            {/* Filters */}
+                            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex gap-4">
+                                <div className="relative flex-1">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                    <input
+                                        type="text"
+                                        placeholder="Search permissions..."
+                                        value={permSearchTerm}
+                                        onChange={(e) => setPermSearchTerm(e.target.value)}
+                                        className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm"
+                                    />
                                 </div>
+                                <select
+                                    value={moduleFilter}
+                                    onChange={(e) => setModuleFilter(e.target.value)}
+                                    className="pl-3 pr-8 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
+                                >
+                                    <option value="all">All Modules</option>
+                                    {modules.map(m => <option key={m} value={m}>{m}</option>)}
+                                </select>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead className="bg-slate-50 dark:bg-slate-800 sticky top-0 z-10 shadow-sm">
+                                        <tr>
+                                            <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase">Permission</th>
+                                            <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase">Module</th>
+                                            <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase">Status</th>
+                                            <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                        {filteredPerms.map(perm => {
+                                            // Status Logic
+                                            const hasRole = userPermissions.rolePermissions?.includes(perm.name);
+                                            const isRevoked = userPermissions.revokedPermissions?.includes(perm.name);
+                                            const isGranted = userPermissions.grantedPermissions?.includes(perm.name);
+
+                                            // Effective State: Does the user effectively have this permission?
+                                            // They have it if explicitly Granted OR (Inherited AND NOT Revoked)
+                                            const effectivelyHasPermission = isGranted || (hasRole && !isRevoked);
+
+                                            let statusBadge;
+                                            if (isRevoked) {
+                                                statusBadge = <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"><X size={12} /> Revoked</span>;
+                                            } else if (isGranted) {
+                                                statusBadge = <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"><Check size={12} /> Granted</span>;
+                                            } else if (hasRole) {
+                                                statusBadge = <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"><Shield size={12} /> Role Default</span>;
+                                            } else {
+                                                statusBadge = <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">None</span>;
+                                            }
+
+                                            return (
+                                                <tr key={perm.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                                    <td className="px-6 py-3">
+                                                        <p className="text-sm font-medium text-slate-900 dark:text-white">{perm.displayName}</p>
+                                                        <p className="text-xs text-slate-500 font-mono">{perm.name}</p>
+                                                    </td>
+                                                    <td className="px-6 py-3 text-sm text-slate-600 dark:text-slate-400">{perm.module}</td>
+                                                    <td className="px-6 py-3">{statusBadge}</td>
+                                                    <td className="px-6 py-3 text-right">
+                                                        <div className="flex justify-end gap-2">
+                                                            {updating === perm.name ? (
+                                                                <Loader className="animate-spin text-indigo-500" size={16} />
+                                                            ) : (
+                                                                <>
+                                                                    {/* Reset Button: Only if there is an override (Grant/Revoke) */}
+                                                                    {(isGranted || isRevoked) && (
+                                                                        <button
+                                                                            onClick={() => handlePermissionChange(perm.name, 'RESET')}
+                                                                            className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition"
+                                                                            title="Reset to Default"
+                                                                        >
+                                                                            <RotateCcw size={16} />
+                                                                        </button>
+                                                                    )}
+
+                                                                    {/* Grant Button: Only if they don't have it effectively */}
+                                                                    {!effectivelyHasPermission && (
+                                                                        <button
+                                                                            onClick={() => handlePermissionChange(perm.name, 'GRANT')}
+                                                                            className="px-3 py-1 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 rounded transition dark:bg-green-900/20 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-900/40"
+                                                                        >
+                                                                            Grant
+                                                                        </button>
+                                                                    )}
+
+                                                                    {/* Revoke Button: Only if they DO have it effectively */}
+                                                                    {effectivelyHasPermission && (
+                                                                        <button
+                                                                            onClick={() => handlePermissionChange(perm.name, 'REVOKE')}
+                                                                            className="px-3 py-1 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded transition dark:bg-red-900/20 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-900/40"
+                                                                        >
+                                                                            Revoke
+                                                                        </button>
+                                                                    )}
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
                             </div>
                         </>
-                    ) : (
-                        <div className="p-8 text-center text-red-500">Failed to load user permissions</div>
                     )}
                 </div>
             </div>

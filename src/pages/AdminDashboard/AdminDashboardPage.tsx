@@ -32,7 +32,7 @@ const AdminDashboardPage: React.FC = () => {
   const [showDetails, setShowDetails] = useState(false);
 
   // Only allow admin role
-  if (!user || user.role !== 'admin') {
+  if (!user || String(user.role).toLowerCase() !== 'admin') {
     return <Navigate to="/" replace />;
   }
 
@@ -110,6 +110,25 @@ const AdminDashboardPage: React.FC = () => {
     }
   };
 
+  const handleApprove = async (userId: string) => {
+    if (!window.confirm('Are you sure you want to approve this instructor?')) return;
+
+    try {
+      setLoading(true);
+      await adminService.reviewInstructor(userId, { approve: true });
+      // Refresh list to show updated status
+      await loadUsers();
+      alert('Instructor approved successfully');
+    } catch (err: any) {
+      console.error('Error approving instructor:', err);
+      const errorData = err.response?.data || err;
+      const msg = errorData.detail || errorData.message || errorData.title || 'Failed to approve instructor';
+      alert(`Failed: ${msg} (Status: ${err.response?.status})`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="min-h-dvh bg-white dark:bg-slate-950 p-3 sm:p-4 md:p-6">
@@ -180,8 +199,8 @@ const AdminDashboardPage: React.FC = () => {
                 <button
                   onClick={() => handleFilterChange('all')}
                   className={`px-3 md:px-4 py-2 md:py-2 rounded-lg font-medium transition min-h-[44px] ${filterRole === 'all'
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
                     }`}
                 >
                   All Users ({users.length})
@@ -189,8 +208,8 @@ const AdminDashboardPage: React.FC = () => {
                 <button
                   onClick={() => handleFilterChange('instructor')}
                   className={`px-3 md:px-4 py-2 md:py-2 rounded-lg font-medium transition min-h-[44px] ${filterRole === 'instructor'
-                      ? 'bg-green-500 text-white'
-                      : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
+                    ? 'bg-green-500 text-white'
+                    : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
                     }`}
                 >
                   Instructors ({stats.instructors})
@@ -198,8 +217,8 @@ const AdminDashboardPage: React.FC = () => {
                 <button
                   onClick={() => handleFilterChange('user')}
                   className={`px-3 md:px-4 py-2 md:py-2 rounded-lg font-medium transition min-h-[44px] ${filterRole === 'user'
-                      ? 'bg-purple-500 text-white'
-                      : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
+                    ? 'bg-purple-500 text-white'
+                    : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
                     }`}
                 >
                   Learners ({stats.learners})
@@ -250,8 +269,8 @@ const AdminDashboardPage: React.FC = () => {
                         <td className="px-6 py-4 text-slate-600 dark:text-slate-400 text-sm">{userData.phoneNumber || '-'}</td>
                         <td className="px-6 py-4">
                           <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${String(userData.role).toLowerCase().includes('instructor')
-                              ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                              : 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
+                            ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                            : 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
                             }`}>
                             {String(userData.role).toLowerCase().includes('instructor') ? 'Instructor' : 'Learner'}
                           </span>
@@ -272,15 +291,25 @@ const AdminDashboardPage: React.FC = () => {
                           )}
                         </td>
                         <td className="px-6 py-4">
-                          <button
-                            onClick={() => {
-                              setSelectedUser(userData);
-                              setShowDetails(true);
-                            }}
-                            className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 text-sm font-medium transition min-h-[44px]"
-                          >
-                            <Eye size={16} /> Details
-                          </button>
+                          <div className="flex gap-2">
+                            {String(userData.role).toLowerCase().includes('instructor') && !userData.isApproved && (
+                              <button
+                                onClick={() => handleApprove(userData.id)}
+                                className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800 text-sm font-medium transition min-h-[44px]"
+                              >
+                                <CheckCircle size={16} /> Approve
+                              </button>
+                            )}
+                            <button
+                              onClick={() => {
+                                setSelectedUser(userData);
+                                setShowDetails(true);
+                              }}
+                              className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 text-sm font-medium transition min-h-[44px]"
+                            >
+                              <Eye size={16} /> Details
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}

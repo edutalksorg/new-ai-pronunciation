@@ -48,9 +48,11 @@ export const isLearner = (userRole: string | undefined): boolean => {
  */
 export const getDashboardRoute = (userRole: string | undefined): string => {
   const role = userRole?.toLowerCase().trim();
-  
+
   if (role === 'admin') {
     return '/admin';
+  } else if (role === 'superadmin') {
+    return '/super-admin';
   } else if (role === 'instructor') {
     return '/instructor-dashboard';
   } else {
@@ -63,9 +65,9 @@ export const getDashboardRoute = (userRole: string | undefined): string => {
  */
 export const getRoleDisplayName = (role: string | undefined): string => {
   if (!role) return 'Unknown';
-  
+
   const lowerRole = role.toLowerCase().trim();
-  
+
   switch (lowerRole) {
     case 'admin':
       return 'Administrator';
@@ -84,7 +86,7 @@ export const getRoleDisplayName = (role: string | undefined): string => {
  */
 export const getRoleColor = (role: string | undefined): string => {
   const lowerRole = role?.toLowerCase().trim();
-  
+
   switch (lowerRole) {
     case 'admin':
       return 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200';
@@ -103,7 +105,7 @@ export const getRoleColor = (role: string | undefined): string => {
  */
 export const getRoleIcon = (role: string | undefined): string => {
   const lowerRole = role?.toLowerCase().trim();
-  
+
   switch (lowerRole) {
     case 'admin':
       return 'ShieldCheck';
