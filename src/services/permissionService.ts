@@ -25,19 +25,17 @@ export interface RolePermissions {
     userCount: number;
 }
 
-
 export const permissionService = {
-    // Get all available system permissions
+    // Get all system permissions 
     getAllPermissions: async () => {
         return apiService.get('/permission-management/get-all-permissions');
     },
 
-    // Get user's current permissions
+    // User Permissions
     getUserPermissions: async (userId: string) => {
         return apiService.get(`/permission-management/users/${userId}`);
     },
 
-    // Update user permissions (grant/revoke)
     updateUserPermissions: async (userId: string, grantPermissions: string[], revokePermissions: string[]) => {
         return apiService.put(`/permission-management/users/${userId}`, {
             userId,
@@ -46,27 +44,23 @@ export const permissionService = {
         });
     },
 
-    // Grant single permission to user
     grantUserPermission: async (userId: string, permissionName: string) => {
         return apiService.post(`/permission-management/users/${userId}/grant`, { permissionName });
     },
 
-    // Revoke single permission from user
     revokeUserPermission: async (userId: string, permissionName: string) => {
         return apiService.post(`/permission-management/users/${userId}/revoke`, { permissionName });
     },
 
-    // Reset user permissions to role defaults
     resetUserPermissions: async (userId: string) => {
-        return apiService.post(`/permission-management/users/${userId}/reset`);
+        return apiService.post(`/permission-management/users/${userId}/reset`, {});
     },
 
-    // Get role's permissions
+    // Role Permissions
     getRolePermissions: async (roleId: string) => {
         return apiService.get(`/permission-management/roles/${roleId}`);
     },
 
-    // Update role permissions
     updateRolePermissions: async (roleId: string, permissionNames: string[]) => {
         return apiService.put(`/permission-management/roles/${roleId}`, {
             roleId,

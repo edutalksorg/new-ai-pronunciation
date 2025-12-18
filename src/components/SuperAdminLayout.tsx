@@ -61,9 +61,9 @@ const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({ children }) => {
     ];
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col md:flex-row font-sans">
+        <div className="h-screen bg-slate-50 dark:bg-slate-950 flex flex-col md:flex-row font-sans overflow-hidden">
             {/* Mobile Header */}
-            <header className="md:hidden bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-4 flex items-center justify-between sticky top-0 z-30">
+            <header className="md:hidden bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-4 flex items-center justify-between flex-shrink-0 z-30">
                 <div className="flex items-center gap-2">
                     <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-1 text-slate-600 dark:text-slate-300">
                         <Menu size={24} />
@@ -75,16 +75,17 @@ const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({ children }) => {
             {/* Sidebar */}
             <aside
                 className={`
-                    fixed md:sticky top-0 left-0 z-40 h-screen w-64 bg-slate-900 text-white transition-transform duration-300 ease-in-out
-                    ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:w-20 lg:w-64'}
+                    fixed inset-y-0 left-0 z-40 bg-slate-900 text-white transition-all duration-300 ease-in-out
+                    md:relative md:translate-x-0 flex flex-col h-full
+                    ${sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full md:w-20 lg:w-64'}
                 `}
             >
                 <div className="h-full flex flex-col">
                     {/* Logo Area */}
                     <div className={`p-6 border-b border-slate-700 flex items-center justify-between ${!sidebarOpen && 'md:justify-center'}`}>
                         <div className={`flex items-center gap-2 ${!sidebarOpen && 'md:hidden lg:flex'}`}>
-                            <div className="w-8 h-8 rounded bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center font-bold text-white">SA</div>
-                            <span className="font-bold text-lg">Super Admin</span>
+                            <div className="w-8 h-8 rounded bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center font-bold text-white flex-shrink-0">SA</div>
+                            <span className="font-bold text-lg whitespace-nowrap">Super Admin</span>
                         </div>
                         {/* Close button for mobile */}
                         <button onClick={() => setSidebarOpen(false)} className="md:hidden text-slate-400 hover:text-white">
@@ -93,7 +94,7 @@ const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({ children }) => {
                     </div>
 
                     {/* Navigation */}
-                    <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
+                    <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto custom-scrollbar">
                         {menuItems.map((item) => (
                             <button
                                 key={item.path}
@@ -106,13 +107,13 @@ const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({ children }) => {
                                 title={!sidebarOpen ? item.label : ''}
                             >
                                 <span className="min-w-[20px]">{item.icon}</span>
-                                <span className={`${!sidebarOpen && 'md:hidden lg:block'}`}>{item.label}</span>
+                                <span className={`${!sidebarOpen && 'md:hidden lg:block'} whitespace-nowrap`}>{item.label}</span>
                             </button>
                         ))}
                     </nav>
 
                     {/* User Profile Footer */}
-                    <div className="p-4 border-t border-slate-800">
+                    <div className="p-4 border-t border-slate-800 flex-shrink-0">
                         <div className="relative" ref={profileRef}>
                             <button
                                 onClick={() => setProfileOpen(!profileOpen)}
@@ -121,9 +122,9 @@ const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({ children }) => {
                                 <img
                                     src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || 'SA')}`}
                                     alt="Profile"
-                                    className="w-9 h-9 rounded-full border border-slate-600"
+                                    className="w-9 h-9 rounded-full border border-slate-600 flex-shrink-0"
                                 />
-                                <div className={`text-left ${!sidebarOpen && 'md:hidden lg:block'}`}>
+                                <div className={`text-left overflow-hidden ${!sidebarOpen && 'md:hidden lg:block'}`}>
                                     <p className="text-sm font-medium text-white truncate max-w-[120px]">{user?.fullName}</p>
                                     <p className="text-xs text-slate-400 truncate max-w-[120px]">Super Admin</p>
                                 </div>
@@ -131,7 +132,7 @@ const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({ children }) => {
 
                             {/* Dropdown */}
                             {profileOpen && (
-                                <div className="absolute bottom-full left-0 w-full mb-2 bg-slate-800 rounded-xl shadow-xl border border-slate-700 overflow-hidden">
+                                <div className="absolute bottom-full left-0 w-full mb-2 bg-slate-800 rounded-xl shadow-xl border border-slate-700 overflow-hidden z-50">
                                     <button
                                         onClick={handleLogout}
                                         className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-slate-700 hover:text-red-300 transition-colors"
@@ -146,10 +147,18 @@ const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({ children }) => {
                 </div>
             </aside>
 
+            {/* Overlay for mobile sidebar */}
+            {sidebarOpen && (
+                <div
+                    className="md:hidden fixed inset-0 bg-black/50 z-30"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
+
             {/* Main Content */}
-            <main className="flex-1 overflow-x-hidden overflow-y-auto w-full">
+            <main className="flex-1 flex flex-col h-full overflow-hidden relative">
                 {/* Desktop Header for toggle */}
-                <header className="hidden md:flex bg-white dark:bg-slate-900 h-16 border-b border-slate-200 dark:border-slate-800 items-center px-6 justify-between">
+                <header className="hidden md:flex bg-white dark:bg-slate-900 h-16 border-b border-slate-200 dark:border-slate-800 items-center px-6 justify-between flex-shrink-0">
                     <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500">
                         <Menu size={20} />
                     </button>
@@ -162,8 +171,10 @@ const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({ children }) => {
                     </div>
                 </header>
 
-                <div className="p-4 md:p-8 max-w-7xl mx-auto">
-                    {children}
+                <div className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-8 relative">
+                    <div className="max-w-7xl mx-auto">
+                        {children}
+                    </div>
                 </div>
             </main>
         </div>

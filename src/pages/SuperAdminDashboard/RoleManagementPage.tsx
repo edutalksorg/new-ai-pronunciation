@@ -50,7 +50,9 @@ const RoleManagementPage: React.FC = () => {
         try {
             setLoadingPermissions(true);
             const res = await permissionService.getUserPermissions(userId);
+            // API might return { data: ... } or just ...
             const data = (res as any)?.data || res;
+            console.log('User Permissions Data:', data);
             setUserPermissions(data);
         } catch (error) {
             console.error("Failed to load user permissions", error);
