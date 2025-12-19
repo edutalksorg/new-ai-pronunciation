@@ -326,7 +326,17 @@ const UserSubscriptions: React.FC = () => {
     };
 
     const handleSubscribe = async (plan: any) => {
-        // Directly process subscription - backend will handle existing subscriptions
+        // Check if user has an active subscription
+        const isSubActive = ['active', 'trialing', 'succeeded', 'year'].includes(currentSub?.status?.toLowerCase());
+
+        if (currentSub && isSubActive) {
+            // Show confirmation modal before switching
+            setPendingPlan(plan);
+            setSwitchModalOpen(true);
+            return;
+        }
+
+        // No active subscription - proceed directly
         await processSubscription(plan);
     };
 
@@ -337,63 +347,43 @@ const UserSubscriptions: React.FC = () => {
             setProcessingSwitch(true);
             setSwitchModalOpen(false);
 
-            console.log('🔄 ========== SWITCHING PLAN ==========');
+            console.log('🔄 ========== PLAN SWITCH FLOW ==========');
             console.log('📋 Current Plan:', currentSub?.planName || currentSub?.plan?.name);
             console.log('📋 New Plan:', pendingPlan.name);
 
             // Step 1: Cancel current subscription
-            dispatch(showToast({ message: 'Canceling current plan...', type: 'info' }));
+            dispatch(showToast({ message: 'Canceling current subscription...', type: 'info' }));
 
-            try {
-                console.log('❌ Canceling current subscription...');
-                await subscriptionsService.cancel({
-                    reason: 'Upgrading to ' + pendingPlan.name
-                });
-                console.log('✅ Cancel API returned success');
+            console.log('❌ Step 1: Canceling current subscription...');
+            console.log('Current subscription data:', currentSub);
+            console.log('Subscription ID:', currentSub?.subscriptionId || currentSub?.id);
 
-                // Wait a moment for backend to process
-                await new Promise(resolve => setTimeout(resolve, 1000));
+            await subscriptionsService.cancel({
+                subscriptionId: currentSub?.subscriptionId || currentSub?.id,
+                reason: 'Switching to ' + pendingPlan.name
+            });
+            console.log('✅ Cancel API call completed');
 
-                // Verify cancellation
-                console.log('🔍 Verifying cancellation...');
-                const checkSub = await subscriptionsService.current().catch(() => null);
-                const subData = (checkSub as any)?.data || checkSub;
-                console.log('📊 Current subscription status:', subData?.status);
+            // Step 2: Wait for cancellation to process
+            console.log('⏳ Waiting for cancellation to process...');
+            await new Promise(resolve => setTimeout(resolve, 2000));
 
-                if (subData && subData.status?.toLowerCase() === 'active') {
-                    console.error('⚠️ BACKEND BUG: Subscription still active after cancel!');
-                    throw new Error('Backend failed to cancel subscription. Please contact support or wait for trial to expire.');
-                }
+            // Step 3: Subscribe to new plan
+            dispatch(showToast({ message: 'Processing new subscription...', type: 'info' }));
+            console.log('💳 Step 2: Subscribing to new plan...');
 
-                console.log('✅ Subscription successfully canceled');
-            } catch (cancelError: any) {
-                console.error('⚠️ Cancel error:', cancelError);
-                const cancelMsg = cancelError.message || cancelError.response?.data?.messages?.[0];
-                console.log('Cancel error message:', cancelMsg);
-
-                // If it's our custom error about backend bug, throw it
-                if (cancelError.message?.includes('Backend failed')) {
-                    throw cancelError;
-                }
-
-                // If error is NOT about "no subscription", throw it
-                if (cancelMsg && !cancelMsg.toLowerCase().includes('no') && !cancelMsg.toLowerCase().includes('not found')) {
-                    throw cancelError;
-                }
-                console.log('⚠️ Continuing despite cancel error...');
-            }
-
-            // Step 2: Subscribe to new plan
-            dispatch(showToast({ message: 'Subscribing to new plan...', type: 'info' }));
-
-            console.log('💳 Subscribing to new plan...');
+            // processSubscription will:
+            // - Call /Subscriptions/subscribe
+            // - Get redirectUrl and transactionId
+            // - Store in localStorage
+            // - Redirect to PhonePe
+            // - After return, checkPaymentStatus verifies and redirects to profile
             await processSubscription(pendingPlan);
 
         } catch (error: any) {
             console.error('❌ Failed to switch plan:', error);
             console.error('Response data:', error.response?.data);
             console.error('Backend messages:', error.response?.data?.messages);
-            console.error('Backend errors:', error.response?.data?.errors);
 
             const errorMsg = error.response?.data?.messages?.[0]
                 || error.response?.data?.errors?.[0]
