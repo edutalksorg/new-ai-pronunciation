@@ -1,16 +1,31 @@
 import { apiService } from './api';
 
+export interface PaginatedResponse<T> {
+    data: T[];
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    pageSize: number;
+    hasPreviousPage: boolean;
+    hasNextPage: boolean;
+}
+
 export interface AdminPaymentTransaction {
     id: string;
+    transactionId?: string;
+    merchantOrderId?: string;
+    paymentProviderTransactionId?: string;
     type: string;
     status: string;
     amount: number;
     currency: string;
     description: string;
-    paymentMethodId: string;
-    relatedEntityId: string;
-    relatedEntityType: string;
+    paymentMethodType?: string;
+    paymentMethodId?: string;
+    relatedEntityId?: string;
+    relatedEntityType?: string;
     createdAt: string;
+    completedAt?: string;
     failureReason?: string;
 }
 
@@ -70,7 +85,14 @@ export const adminPaymentsService = {
         startDate?: string;
         endDate?: string;
     }) => {
-        return apiService.get<AdminPaymentTransaction[]>('/admin/payments/transactions', { params });
+        // The API returns paginated response, but the interceptor unwraps the 'data' field
+        // So we get the array directly
+        const response = await apiService.get<AdminPaymentTransaction[]>('/admin/payments/transactions', { params });
+        return response || [];
+    },
+
+    getTransactionStatus: async (transactionId: string) => {
+        return apiService.get<AdminPaymentTransaction>(`/payments/${transactionId}/status`);
     },
 
     // Withdrawals

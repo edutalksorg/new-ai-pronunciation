@@ -90,7 +90,7 @@ const ChangePasswordPage: React.FC = () => {
                 <div className="card">
                     {/* Back Button */}
                     <Link
-                        to="/dashboard/settings"
+                        to="/settings"
                         className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors mb-6 group"
                     >
                         <svg

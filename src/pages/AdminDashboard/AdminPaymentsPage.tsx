@@ -3,7 +3,7 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
   DollarSign, Users, TrendingUp, Settings, FileText,
-  AlertCircle, CheckCircle, XCircle, ArrowLeft, Wallet, RefreshCcw
+  AlertCircle, CheckCircle, XCircle, ArrowLeft, Wallet, RefreshCcw, Eye
 } from 'lucide-react';
 import AdminLayout from '../../components/AdminLayout';
 import Button from '../../components/Button';
@@ -24,6 +24,7 @@ const AdminPaymentsPage: React.FC = () => {
   // Modal States
   const [selectedWithdrawal, setSelectedWithdrawal] = useState<AdminWithdrawalRequest | null>(null);
   const [selectedRefund, setSelectedRefund] = useState<AdminRefundRequest | null>(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<AdminPaymentTransaction | null>(null);
   const [actionType, setActionType] = useState<'approve' | 'reject' | 'complete' | null>(null);
   const [actionNote, setActionNote] = useState('');
 
@@ -120,6 +121,15 @@ const AdminPaymentsPage: React.FC = () => {
     }
   };
 
+  const handleViewTransactionDetails = async (transactionId: string) => {
+    try {
+      const details = await adminPaymentsService.getTransactionStatus(transactionId);
+      setSelectedTransaction(details);
+    } catch (error: any) {
+      dispatch(showToast({ message: 'Failed to load transaction details', type: 'error' }));
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -151,8 +161,8 @@ const AdminPaymentsPage: React.FC = () => {
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex items-center gap-2 px-4 py-3 font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === tab.id
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
             >
               <tab.icon size={18} />
@@ -163,49 +173,108 @@ const AdminPaymentsPage: React.FC = () => {
 
         {/* Content */}
         {activeTab === 'transactions' && (
-          <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-slate-50 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white">ID</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white">Type</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white">Amount</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white">Status</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white">Date</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                  {isLoading ? (
-                    <tr><td colSpan={5} className="p-8 text-center">Loading...</td></tr>
-                  ) : transactions.length === 0 ? (
-                    <tr><td colSpan={5} className="p-8 text-center text-slate-500">No transactions found</td></tr>
-                  ) : (
-                    transactions.map((txn) => (
-                      <tr key={txn.id} className="hover:bg-slate-50 dark:hover:bg-slate-700">
-                        <td className="px-6 py-4 text-sm font-mono text-slate-500">{txn.id.substring(0, 8)}...</td>
-                        <td className="px-6 py-4 text-sm">{txn.type}</td>
-                        <td className={`px-6 py-4 text-sm font-bold ${txn.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {txn.currency} {txn.amount}
-                        </td>
-                        <td className="px-6 py-4 text-sm">
-                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${txn.status === 'Completed' ? 'bg-green-100 text-green-800' :
+          <>
+            {/* Filters */}
+            <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    Status Filter
+                  </label>
+                  <select
+                    className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+                    onChange={(e) => {
+                      // This will be used when fetching data
+                      fetchData();
+                    }}
+                  >
+                    <option value="">All Statuses</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Failed">Failed</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    Type Filter
+                  </label>
+                  <select
+                    className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+                    onChange={(e) => {
+                      fetchData();
+                    }}
+                  >
+                    <option value="">All Types</option>
+                    <option value="Payment">Payment</option>
+                    <option value="Refund">Refund</option>
+                    <option value="Withdrawal">Withdrawal</option>
+                  </select>
+                </div>
+                <div className="flex items-end">
+                  <button
+                    onClick={fetchData}
+                    className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+                  >
+                    Refresh
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-50 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white">ID</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white">Type</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white">Amount</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white">Status</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white">Date</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                    {isLoading ? (
+                      <tr><td colSpan={6} className="p-8 text-center">Loading...</td></tr>
+                    ) : transactions.length === 0 ? (
+                      <tr><td colSpan={6} className="p-8 text-center text-slate-500">No transactions found</td></tr>
+                    ) : (
+                      transactions.map((txn) => (
+                        <tr key={txn.id} className="hover:bg-slate-50 dark:hover:bg-slate-700">
+                          <td className="px-6 py-4 text-sm font-mono text-slate-500">{txn.id.substring(0, 8)}...</td>
+                          <td className="px-6 py-4 text-sm">{txn.type}</td>
+                          <td className={`px-6 py-4 text-sm font-bold ${txn.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {txn.currency} {txn.amount}
+                          </td>
+                          <td className="px-6 py-4 text-sm">
+                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${txn.status === 'Completed' ? 'bg-green-100 text-green-800' :
                               txn.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
                                 'bg-red-100 text-red-800'
-                            }`}>
-                            {txn.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-slate-500">
-                          {new Date(txn.createdAt).toLocaleDateString()}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                              }`}>
+                              {txn.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-slate-500">
+                            {new Date(txn.createdAt).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4 text-sm">
+                            <button
+                              onClick={() => handleViewTransactionDetails(txn.id)}
+                              className="flex items-center gap-1 px-3 py-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                            >
+                              <Eye size={16} />
+                              <span>Details</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          </>
         )}
 
         {activeTab === 'withdrawals' && (
@@ -389,6 +458,140 @@ const AdminPaymentsPage: React.FC = () => {
                   isLoading={isLoading}
                 >
                   Confirm
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Transaction Detail Modal */}
+        {selectedTransaction && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-slate-800 rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Transaction Details</h2>
+                <button
+                  onClick={() => setSelectedTransaction(null)}
+                  className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                >
+                  <XCircle className="w-6 h-6 text-slate-600 dark:text-slate-400" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Transaction ID */}
+                <div className="border-b border-slate-200 dark:border-slate-700 pb-3">
+                  <label className="text-sm font-medium text-slate-500 dark:text-slate-400">Transaction ID</label>
+                  <p className="text-base font-mono text-slate-900 dark:text-white mt-1">{selectedTransaction.transactionId || selectedTransaction.id}</p>
+                </div>
+
+                {/* Merchant Order ID */}
+                {selectedTransaction.merchantOrderId && (
+                  <div className="border-b border-slate-200 dark:border-slate-700 pb-3">
+                    <label className="text-sm font-medium text-slate-500 dark:text-slate-400">Merchant Order ID</label>
+                    <p className="text-base font-mono text-slate-900 dark:text-white mt-1">{selectedTransaction.merchantOrderId}</p>
+                  </div>
+                )}
+
+                {/* Payment Provider Transaction ID */}
+                {selectedTransaction.paymentProviderTransactionId && (
+                  <div className="border-b border-slate-200 dark:border-slate-700 pb-3">
+                    <label className="text-sm font-medium text-slate-500 dark:text-slate-400">Payment Provider Transaction ID</label>
+                    <p className="text-base font-mono text-slate-900 dark:text-white mt-1">{selectedTransaction.paymentProviderTransactionId}</p>
+                  </div>
+                )}
+
+                {/* Status */}
+                <div className="border-b border-slate-200 dark:border-slate-700 pb-3">
+                  <label className="text-sm font-medium text-slate-500 dark:text-slate-400">Status</label>
+                  <div className="mt-1">
+                    <span className={`px-3 py-1.5 rounded-full text-sm font-semibold ${selectedTransaction.status === 'Completed' ? 'bg-green-100 text-green-800' :
+                      selectedTransaction.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                      {selectedTransaction.status}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Amount & Currency */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="border-b border-slate-200 dark:border-slate-700 pb-3">
+                    <label className="text-sm font-medium text-slate-500 dark:text-slate-400">Amount</label>
+                    <p className={`text-xl font-bold mt-1 ${selectedTransaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {selectedTransaction.amount}
+                    </p>
+                  </div>
+                  <div className="border-b border-slate-200 dark:border-slate-700 pb-3">
+                    <label className="text-sm font-medium text-slate-500 dark:text-slate-400">Currency</label>
+                    <p className="text-xl font-bold text-slate-900 dark:text-white mt-1">{selectedTransaction.currency}</p>
+                  </div>
+                </div>
+
+                {/* Description */}
+                {selectedTransaction.description && (
+                  <div className="border-b border-slate-200 dark:border-slate-700 pb-3">
+                    <label className="text-sm font-medium text-slate-500 dark:text-slate-400">Description</label>
+                    <p className="text-base text-slate-900 dark:text-white mt-1">{selectedTransaction.description}</p>
+                  </div>
+                )}
+
+                {/* Payment Method Type */}
+                {selectedTransaction.paymentMethodType && (
+                  <div className="border-b border-slate-200 dark:border-slate-700 pb-3">
+                    <label className="text-sm font-medium text-slate-500 dark:text-slate-400">Payment Method</label>
+                    <p className="text-base text-slate-900 dark:text-white mt-1">{selectedTransaction.paymentMethodType}</p>
+                  </div>
+                )}
+
+                {/* Type */}
+                {selectedTransaction.type && (
+                  <div className="border-b border-slate-200 dark:border-slate-700 pb-3">
+                    <label className="text-sm font-medium text-slate-500 dark:text-slate-400">Transaction Type</label>
+                    <p className="text-base text-slate-900 dark:text-white mt-1">{selectedTransaction.type}</p>
+                  </div>
+                )}
+
+                {/* Dates */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="border-b border-slate-200 dark:border-slate-700 pb-3">
+                    <label className="text-sm font-medium text-slate-500 dark:text-slate-400">Created At</label>
+                    <p className="text-base text-slate-900 dark:text-white mt-1">
+                      {new Date(selectedTransaction.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                  {selectedTransaction.completedAt && (
+                    <div className="border-b border-slate-200 dark:border-slate-700 pb-3">
+                      <label className="text-sm font-medium text-slate-500 dark:text-slate-400">Completed At</label>
+                      <p className="text-base text-slate-900 dark:text-white mt-1">
+                        {new Date(selectedTransaction.completedAt).toLocaleString()}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Failure Reason */}
+                {selectedTransaction.failureReason && (
+                  <div className="border-b border-slate-200 dark:border-slate-700 pb-3">
+                    <label className="text-sm font-medium text-slate-500 dark:text-slate-400">Failure Reason</label>
+                    <p className="text-base text-red-600 dark:text-red-400 mt-1">{selectedTransaction.failureReason}</p>
+                  </div>
+                )}
+
+                {/* Related Entity */}
+                {selectedTransaction.relatedEntityType && selectedTransaction.relatedEntityId && (
+                  <div className="border-b border-slate-200 dark:border-slate-700 pb-3">
+                    <label className="text-sm font-medium text-slate-500 dark:text-slate-400">Related Entity</label>
+                    <p className="text-base text-slate-900 dark:text-white mt-1">
+                      {selectedTransaction.relatedEntityType}: {selectedTransaction.relatedEntityId}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <Button variant="secondary" onClick={() => setSelectedTransaction(null)}>
+                  Close
                 </Button>
               </div>
             </div>
