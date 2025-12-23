@@ -74,6 +74,10 @@ export const callsService = {
   getStunServers: async () =>
     apiService.get('/calls/stun-servers'),
 
+  // Agora Configuration
+  getAgoraToken: async (channelName: string, uid: string) =>
+    apiService.get('/calls/agora-token', { params: { channelName, uid } }),
+
   // Call Recording
   startRecording: async (callId: string) =>
     apiService.post(`/calls/${callId}/record/start`),

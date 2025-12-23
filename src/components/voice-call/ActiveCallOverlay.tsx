@@ -208,7 +208,7 @@ const ActiveCallOverlay: React.FC = () => {
                         </h4>
                         <p className={`text-sm font-medium ${callState === 'active' ? '' : 'animate-pulse'
                             } ${getStatusColor()}`}>
-                            {callState === 'ringing' ? 'Ringing...' : callState === 'connecting' ? 'Connecting...' : 'Connected'}
+                            {getStatusText()}
                         </p>
                     </div>
                 </div>

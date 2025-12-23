@@ -149,6 +149,13 @@ export const STORAGE_KEYS = {
   REFRESH_TOKEN: 'edutalks_refresh_token',
 };
 
+// Agora Configuration
+export const AGORA_CONFIG = {
+  APP_ID: '3a2e9a0f5c924ca9b460555916dbaae5',
+  // Note: Certificate should ONLY be used on backend for token generation
+  // NEVER expose certificate in frontend code
+};
+
 export const TOAST_MESSAGES = {
   LOGIN_SUCCESS: 'Login successful! Welcome back.',
   REGISTER_SUCCESS: 'Registration successful! You now have 2 days free trial.',
