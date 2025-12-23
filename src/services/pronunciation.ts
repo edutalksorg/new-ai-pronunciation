@@ -3,7 +3,13 @@ import { apiService } from './api';
 export const pronunciationService = {
   // User Operations
   listParagraphs: async (params?: Record<string, any>) =>
-    apiService.get('/pronunciation/paragraphs', { params }),
+    apiService.get('/pronunciation/paragraphs', {
+      params: {
+        ...params,
+        pageSize: params?.pageSize || 1000, // Request up to 1000 paragraphs by default
+        pageNumber: params?.pageNumber || 1
+      }
+    }),
 
   getParagraph: async (paragraphId: string) =>
     apiService.get(`/pronunciation/paragraphs/${paragraphId}`),
@@ -73,7 +79,14 @@ export const pronunciationService = {
     apiService.post(`/pronunciation/paragraphs/${paragraphId}/publish`),
 
   getInstructorParagraphs: async (params?: Record<string, any>) =>
-    apiService.get('/pronunciation/paragraphs', { params: { ...params, mode: 'instructor' } }),
+    apiService.get('/pronunciation/paragraphs', {
+      params: {
+        ...params,
+        mode: 'instructor',
+        pageSize: params?.pageSize || 1000, // Request up to 1000 paragraphs by default
+        pageNumber: params?.pageNumber || 1
+      }
+    }),
 
   getParagraphAnalytics: async (paragraphId: string) =>
     apiService.get(`/pronunciation/paragraphs/${paragraphId}/analytics`),

@@ -120,8 +120,8 @@ const UserTopicBrowser: React.FC = () => {
 
     return (
         <div className="space-y-4 md:space-y-6">
-            <div className="flex items-center justify-between">
-                <h3 className="text-lg md:text-xl font-semibold text-slate-900 dark:text-white">
+            <div className="flex items-center justify-between px-2 sm:px-0">
+                <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-slate-900 dark:text-white">
                     Topics Path
                 </h3>
             </div>
@@ -129,12 +129,13 @@ const UserTopicBrowser: React.FC = () => {
             {loading ? (
                 <div className="py-12 text-center text-slate-500">Loading topics...</div>
             ) : topics.length > 0 ? (
-                <div className="flex flex-col items-center max-w-2xl mx-auto">
+                <div className="flex flex-col items-center max-w-2xl mx-auto px-2 sm:px-4">
                     {/* Progress Indicator */}
-                    <div className="w-full mb-6">
-                        <div className="flex justify-between text-sm text-slate-500 mb-2">
+                    <div className="w-full mb-4 sm:mb-6">
+                        <div className="flex justify-between text-xs sm:text-sm text-slate-500 mb-2">
                             <span>Topic {currentTopicIndex + 1} of {topics.length}</span>
-                            <span>{Math.round(((currentTopicIndex + 1) / topics.length) * 100)}% Progress</span>
+                            <span className="hidden xs:inline">{Math.round(((currentTopicIndex + 1) / topics.length) * 100)}% Progress</span>
+                            <span className="xs:hidden">{Math.round(((currentTopicIndex + 1) / topics.length) * 100)}%</span>
                         </div>
                         <div className="w-full h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                             <div
@@ -145,30 +146,34 @@ const UserTopicBrowser: React.FC = () => {
                     </div>
 
                     {/* Navigation Controls - Top */}
-                    <div className="w-full flex justify-between items-center mb-6">
+                    <div className="w-full flex justify-between items-center mb-4 sm:mb-6 gap-2">
                         <button
                             onClick={() => setCurrentTopicIndex(prev => Math.max(0, prev - 1))}
                             disabled={currentTopicIndex === 0}
-                            className={`px-4 py-2 rounded-lg font-medium transition-all ${currentTopicIndex === 0
+                            className={`px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition-all min-h-[44px] ${currentTopicIndex === 0
                                 ? 'text-slate-300 cursor-not-allowed'
                                 : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
                                 }`}
                         >
-                            ← Previous
+                            <span className="hidden sm:inline">← Previous</span>
+                            <span className="sm:hidden">←</span>
                         </button>
 
                         <div className="flex gap-2">
                             {currentTopicIndex < unlockedIndex ? (
-                                <span className="text-green-600 text-sm font-medium flex items-center px-3 py-1 bg-green-50 dark:bg-green-900/20 rounded-full">
-                                    Completed
+                                <span className="text-green-600 text-xs sm:text-sm font-medium flex items-center px-2 sm:px-3 py-1 bg-green-50 dark:bg-green-900/20 rounded-full">
+                                    <span className="hidden xs:inline">Completed</span>
+                                    <span className="xs:hidden">✓</span>
                                 </span>
                             ) : currentTopicIndex === unlockedIndex ? (
-                                <span className="text-indigo-600 text-sm font-medium flex items-center px-3 py-1 bg-indigo-50 dark:bg-indigo-900/20 rounded-full animate-pulse">
-                                    Current
+                                <span className="text-indigo-600 text-xs sm:text-sm font-medium flex items-center px-2 sm:px-3 py-1 bg-indigo-50 dark:bg-indigo-900/20 rounded-full animate-pulse">
+                                    <span className="hidden xs:inline">Current</span>
+                                    <span className="xs:hidden">●</span>
                                 </span>
                             ) : (
-                                <span className="text-slate-400 text-sm font-medium flex items-center px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full">
-                                    Locked
+                                <span className="text-slate-400 text-xs sm:text-sm font-medium flex items-center px-2 sm:px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full">
+                                    <span className="hidden xs:inline">Locked</span>
+                                    <span className="xs:hidden">🔒</span>
                                 </span>
                             )}
                         </div>
@@ -176,12 +181,13 @@ const UserTopicBrowser: React.FC = () => {
                         <button
                             onClick={() => setCurrentTopicIndex(prev => Math.min(topics.length - 1, prev + 1))}
                             disabled={currentTopicIndex >= unlockedIndex || currentTopicIndex === topics.length - 1}
-                            className={`px-4 py-2 rounded-lg font-medium transition-all ${currentTopicIndex >= unlockedIndex || currentTopicIndex === topics.length - 1
+                            className={`px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition-all min-h-[44px] ${currentTopicIndex >= unlockedIndex || currentTopicIndex === topics.length - 1
                                 ? 'text-slate-300 cursor-not-allowed'
                                 : 'text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-900/20'
                                 }`}
                         >
-                            Next →
+                            <span className="hidden sm:inline">Next →</span>
+                            <span className="sm:hidden">→</span>
                         </button>
                     </div>
 
@@ -196,7 +202,7 @@ const UserTopicBrowser: React.FC = () => {
 
                         return (
                             <div
-                                className={`w-full bg-white dark:bg-slate-800 rounded-xl p-6 md:p-8 border transition-all ${isLocked
+                                className={`w-full bg-white dark:bg-slate-800 rounded-lg sm:rounded-xl p-4 sm:p-6 md:p-8 border transition-all cursor-pointer ${isLocked
                                     ? 'border-slate-200 dark:border-slate-700 opacity-75'
                                     : isCompleted
                                         ? 'border-green-200 dark:border-green-900/50 bg-green-50/10'
@@ -208,14 +214,14 @@ const UserTopicBrowser: React.FC = () => {
                                     }
                                 }}
                             >
-                                <div className="flex justify-between items-start mb-6">
-                                    <div className={`p-3 rounded-xl ${isLocked
+                                <div className="flex justify-between items-start mb-4 sm:mb-6">
+                                    <div className={`p-2 sm:p-3 rounded-lg sm:rounded-xl ${isLocked
                                         ? 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500'
                                         : isCompleted
                                             ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
                                             : 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400'
                                         }`}>
-                                        {isCompleted ? <CheckCircle size={28} /> : <BookOpen size={28} />}
+                                        {isCompleted ? <CheckCircle className="w-6 h-6 sm:w-7 sm:h-7" /> : <BookOpen className="w-6 h-6 sm:w-7 sm:h-7" />}
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <span className={`text-sm font-medium px-3 py-1 rounded-full ${isLocked
@@ -235,26 +241,28 @@ const UserTopicBrowser: React.FC = () => {
                                     </div>
                                 </div>
 
-                                <h4 className={`text-xl md:text-2xl font-bold mb-3 ${isLocked ? 'text-slate-400 dark:text-slate-500' : 'text-slate-900 dark:text-white'
+                                <h4 className={`text-lg sm:text-xl md:text-2xl font-bold mb-2 sm:mb-3 ${isLocked ? 'text-slate-400 dark:text-slate-500' : 'text-slate-900 dark:text-white'
                                     }`}>
                                     {topic.title}
                                 </h4>
 
-                                <p className={`text-base mb-8 line-clamp-3 ${isLocked ? 'text-slate-400 dark:text-slate-600' : 'text-slate-500 dark:text-slate-400'
+                                <p className={`text-sm sm:text-base mb-6 sm:mb-8 line-clamp-2 sm:line-clamp-3 ${isLocked ? 'text-slate-400 dark:text-slate-600' : 'text-slate-500 dark:text-slate-400'
                                     }`}>
                                     {topic.description}
                                 </p>
 
                                 <div className="flex items-center justify-between">
                                     {isLocked ? (
-                                        <div className="flex items-center text-slate-400 font-medium">
-                                            <Lock size={18} className="mr-2" />
-                                            <span>Locked &bull; Complete previous topic</span>
+                                        <div className="flex items-center text-slate-400 text-xs sm:text-sm font-medium">
+                                            <Lock size={16} className="mr-2 flex-shrink-0" />
+                                            <span className="hidden sm:inline">Locked • Complete previous topic</span>
+                                            <span className="sm:hidden">Locked</span>
                                         </div>
                                     ) : (
-                                        <div className={`flex items-center font-semibold group cursor-pointer ${isCompleted ? 'text-green-600 dark:text-green-400' : 'text-indigo-600 dark:text-indigo-400'
+                                        <div className={`flex items-center text-sm sm:text-base font-semibold group cursor-pointer ${isCompleted ? 'text-green-600 dark:text-green-400' : 'text-indigo-600 dark:text-indigo-400'
                                             }`}>
-                                            {isCompleted ? 'Review Topic' : 'Start Learning'}
+                                            <span className="hidden sm:inline">{isCompleted ? 'Review Topic' : 'Start Learning'}</span>
+                                            <span className="sm:hidden">{isCompleted ? 'Review' : 'Start'}</span>
                                             <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
                                         </div>
                                     )}

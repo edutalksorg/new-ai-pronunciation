@@ -617,14 +617,14 @@ const UserSubscriptions: React.FC = () => {
     return (
         <div className="space-y-4 md:space-y-6 lg:space-y-8">
             {/* Header */}
-            <div className="flex items-center gap-3 md:gap-4">
+            <div className="flex items-center gap-2 sm:gap-3 md:gap-4 px-2 sm:px-0">
                 <button
                     onClick={() => navigate(-1)}
-                    className="p-2 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 rounded-full transition-colors text-blue-600 dark:text-blue-400"
+                    className="p-2 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 rounded-full transition-colors text-blue-600 dark:text-blue-400 min-h-[44px] min-w-[44px] flex items-center justify-center"
                 >
-                    <ArrowLeft size={24} />
+                    <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
-                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">My Subscriptions</h1>
+                <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">My Subscriptions</h1>
             </div>
             {/* Current Plan Status */}
             {currentSub && (
@@ -633,7 +633,7 @@ const UserSubscriptions: React.FC = () => {
                         <h3 className="text-sm md:text-base font-semibold text-slate-900 dark:text-white flex flex-wrap items-center gap-2">
                             Current Plan: <span className="text-primary-600">{currentSub.planName || currentSub.plan?.name || 'Free Trial'}</span>
                         </h3>
-                        <p className="text-sm text-slate-500">
+                        <p className="text-xs sm:text-sm text-slate-500">
                             {['active', 'trialing', 'succeeded', 'year'].includes(currentSub.status?.toLowerCase()) ? 'Active' : 'Expired'} • Renews on {new Date(currentSub.endDate || currentSub.renewalDate).toLocaleDateString()}
                         </p>
                     </div>
@@ -642,9 +642,9 @@ const UserSubscriptions: React.FC = () => {
             )}
 
             {/* Plans Grid */}
-            <div>
-                <h3 className="text-lg md:text-xl lg:text-2xl font-bold text-slate-900 dark:text-white mb-4 md:mb-6">Available Plans</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            <div className="px-2 sm:px-0">
+                <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-slate-900 dark:text-white mb-4 md:mb-6">Available Plans</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                     {plans.length > 0 ? plans.map((plan) => {
                         // Check if this is the Yearly Plan
                         const isYearlyPlan = plan.name?.toLowerCase().includes('yearly') || plan.interval?.toLowerCase() === 'year';

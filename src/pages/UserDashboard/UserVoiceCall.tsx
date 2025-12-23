@@ -262,8 +262,8 @@ const UserVoiceCall: React.FC = () => {
     return (
         <div className="space-y-4 md:space-y-6">
             {/* Header with Session Timer */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 md:gap-4">
-                <h3 className="text-lg md:text-xl font-semibold text-slate-900 dark:text-white">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 md:gap-4 px-2 sm:px-0">
+                <h3 className="text-base sm:text-lg md:text-xl font-semibold text-slate-900 dark:text-white">
                     {activeTab === 'available' ? 'Available Users' : 'Call History'}
                 </h3>
                 <div className="flex items-center gap-2 md:gap-4 w-full sm:w-auto">
@@ -356,7 +356,7 @@ const UserVoiceCall: React.FC = () => {
                             <Phone className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                         </div>
 
-                        <h2 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mb-3">
+                        <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900 dark:text-white mb-2 sm:mb-3 px-4">
                             Review with a Random Partner
                         </h2>
 
@@ -451,34 +451,34 @@ const UserVoiceCall: React.FC = () => {
                                 const status = call.status || 'Unknown';
 
                                 return (
-                                    <div key={call.callId || call.id} className="p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl flex items-center justify-between transition-hover hover:border-blue-300 dark:hover:border-blue-700">
-                                        <div className="flex items-center gap-4">
-                                            <div className={`p-2.5 rounded-full ${status === 'Completed' ? 'bg-green-100 text-green-600 dark:bg-green-900/30' :
+                                    <div key={call.callId || call.id} className="p-3 sm:p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg sm:rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 transition-hover hover:border-blue-300 dark:hover:border-blue-700">
+                                        <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                                            <div className={`p-2 sm:p-2.5 rounded-full flex-shrink-0 ${status === 'Completed' ? 'bg-green-100 text-green-600 dark:bg-green-900/30' :
                                                 status === 'Missed' ? 'bg-red-100 text-red-600 dark:bg-red-900/30' :
                                                     'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
                                                 }`}>
                                                 {/* Direction Icon */}
                                                 {isIncoming ? (
                                                     <div className="relative">
-                                                        <Phone size={20} />
-                                                        <ArrowLeft size={12} className="absolute -bottom-1 -right-1 bg-white dark:bg-slate-800 rounded-full" />
+                                                        <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
+                                                        <ArrowLeft size={10} className="absolute -bottom-1 -right-1 bg-white dark:bg-slate-800 rounded-full" />
                                                     </div>
                                                 ) : (
-                                                    <Phone size={20} />
+                                                    <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
                                                 )}
                                             </div>
-                                            <div>
-                                                <h4 className="font-semibold text-slate-900 dark:text-white">
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">
                                                     {/* MASKED NAME as per request */}
                                                     Voice Call
                                                 </h4>
-                                                <p className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
+                                                <p className="text-xs text-slate-500 flex flex-wrap items-center gap-1 sm:gap-2 mt-0.5">
                                                     <span>{new Date(startTime).toLocaleDateString()}</span>
-                                                    <span>•</span>
+                                                    <span className="hidden xs:inline">•</span>
                                                     <span>{new Date(startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                                     {status && (
                                                         <>
-                                                            <span>•</span>
+                                                            <span className="hidden xs:inline">•</span>
                                                             <span className={
                                                                 status === 'Missed' ? 'text-red-500 font-medium' :
                                                                     status === 'Completed' ? 'text-green-600 font-medium' : ''
@@ -488,13 +488,11 @@ const UserVoiceCall: React.FC = () => {
                                                 </p>
                                             </div>
                                         </div>
-                                        <div className="flex flex-col items-end gap-1">
-                                            <div className="flex items-center gap-1.5 text-sm font-mono text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
-                                                <Clock size={14} />
-                                                <span>
-                                                    {Math.floor(duration / 60)}:{String(duration % 60).padStart(2, '0')}
-                                                </span>
-                                            </div>
+                                        <div className="flex items-center gap-1.5 text-xs sm:text-sm font-mono text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded self-end sm:self-auto">
+                                            <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                                            <span>
+                                                {Math.floor(duration / 60)}:{String(duration % 60).padStart(2, '0')}
+                                            </span>
                                         </div>
                                     </div>
                                 );
@@ -519,10 +517,10 @@ const UserVoiceCall: React.FC = () => {
                             <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600 dark:text-red-400">
                                 <Clock size={32} />
                             </div>
-                            <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+                            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mb-2">
                                 Voice Call Limit Reached
                             </h3>
-                            <p className="text-slate-600 dark:text-slate-400">
+                            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">
                                 You've used your 5 minutes of free voice calls
                             </p>
                         </div>

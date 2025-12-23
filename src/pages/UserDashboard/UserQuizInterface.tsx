@@ -168,17 +168,18 @@ const UserQuizInterface: React.FC = () => {
 
     return (
         <div className="space-y-4 md:space-y-6">
-            <div className="flex items-center justify-between">
-                <h3 className="text-lg md:text-xl font-semibold text-slate-900 dark:text-white">Quiz Path</h3>
+            <div className="flex items-center justify-between px-2 sm:px-0">
+                <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-slate-900 dark:text-white">Quiz Path</h3>
             </div>
 
             {quizzes.length > 0 ? (
-                <div className="flex flex-col items-center max-w-2xl mx-auto">
+                <div className="flex flex-col items-center max-w-2xl mx-auto px-2 sm:px-4">
                     {/* Progress Indicator */}
-                    <div className="w-full mb-6">
-                        <div className="flex justify-between text-sm text-slate-500 mb-2">
+                    <div className="w-full mb-4 sm:mb-6">
+                        <div className="flex justify-between text-xs sm:text-sm text-slate-500 mb-2">
                             <span>Quiz {currentQuizIndex + 1} of {quizzes.length}</span>
-                            <span>{Math.round(((currentQuizIndex + 1) / quizzes.length) * 100)}% Progress</span>
+                            <span className="hidden xs:inline">{Math.round(((currentQuizIndex + 1) / quizzes.length) * 100)}% Progress</span>
+                            <span className="xs:hidden">{Math.round(((currentQuizIndex + 1) / quizzes.length) * 100)}%</span>
                         </div>
                         <div className="w-full h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                             <div
@@ -189,30 +190,34 @@ const UserQuizInterface: React.FC = () => {
                     </div>
 
                     {/* Navigation Controls */}
-                    <div className="w-full flex justify-between items-center mb-6">
+                    <div className="w-full flex justify-between items-center mb-4 sm:mb-6 gap-2">
                         <button
                             onClick={() => setCurrentQuizIndex(prev => Math.max(0, prev - 1))}
                             disabled={currentQuizIndex === 0}
-                            className={`px-4 py-2 rounded-lg font-medium transition-all ${currentQuizIndex === 0
+                            className={`px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition-all min-h-[44px] ${currentQuizIndex === 0
                                 ? 'text-slate-300 cursor-not-allowed'
                                 : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
                                 }`}
                         >
-                            ← Previous
+                            <span className="hidden sm:inline">← Previous</span>
+                            <span className="sm:hidden">←</span>
                         </button>
 
                         <div className="flex gap-2">
                             {currentQuizIndex < unlockedIndex ? (
-                                <span className="text-green-600 text-sm font-medium flex items-center px-3 py-1 bg-green-50 dark:bg-green-900/20 rounded-full">
-                                    Completed
+                                <span className="text-green-600 text-xs sm:text-sm font-medium flex items-center px-2 sm:px-3 py-1 bg-green-50 dark:bg-green-900/20 rounded-full">
+                                    <span className="hidden xs:inline">Completed</span>
+                                    <span className="xs:hidden">✓</span>
                                 </span>
                             ) : currentQuizIndex === unlockedIndex ? (
-                                <span className="text-pink-600 text-sm font-medium flex items-center px-3 py-1 bg-pink-50 dark:bg-pink-900/20 rounded-full animate-pulse">
-                                    Current
+                                <span className="text-pink-600 text-xs sm:text-sm font-medium flex items-center px-2 sm:px-3 py-1 bg-pink-50 dark:bg-pink-900/20 rounded-full animate-pulse">
+                                    <span className="hidden xs:inline">Current</span>
+                                    <span className="xs:hidden">●</span>
                                 </span>
                             ) : (
-                                <span className="text-slate-400 text-sm font-medium flex items-center px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full">
-                                    Locked
+                                <span className="text-slate-400 text-xs sm:text-sm font-medium flex items-center px-2 sm:px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full">
+                                    <span className="hidden xs:inline">Locked</span>
+                                    <span className="xs:hidden">🔒</span>
                                 </span>
                             )}
                         </div>
@@ -220,12 +225,13 @@ const UserQuizInterface: React.FC = () => {
                         <button
                             onClick={() => setCurrentQuizIndex(prev => Math.min(quizzes.length - 1, prev + 1))}
                             disabled={currentQuizIndex >= unlockedIndex || currentQuizIndex === quizzes.length - 1}
-                            className={`px-4 py-2 rounded-lg font-medium transition-all ${currentQuizIndex >= unlockedIndex || currentQuizIndex === quizzes.length - 1
+                            className={`px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition-all min-h-[44px] ${currentQuizIndex >= unlockedIndex || currentQuizIndex === quizzes.length - 1
                                 ? 'text-slate-300 cursor-not-allowed'
                                 : 'text-pink-600 hover:bg-pink-50 dark:text-pink-400 dark:hover:bg-pink-900/20'
                                 }`}
                         >
-                            Next →
+                            <span className="hidden sm:inline">Next →</span>
+                            <span className="sm:hidden">→</span>
                         </button>
                     </div>
 
@@ -240,21 +246,21 @@ const UserQuizInterface: React.FC = () => {
                             : null;
 
                         return (
-                            <div className={`w-full bg-white dark:bg-slate-800 rounded-xl border transition-all ${isLocked
+                            <div className={`w-full bg-white dark:bg-slate-800 rounded-lg sm:rounded-xl border transition-all ${isLocked
                                 ? 'border-slate-200 dark:border-slate-700 opacity-75'
                                 : isCompleted
                                     ? 'border-green-200 dark:border-green-900/50 bg-green-50/10'
                                     : 'border-pink-200 dark:border-pink-900 ring-1 ring-pink-100 dark:ring-pink-900/30 shadow-md'
                                 }`}>
-                                <div className="p-6 md:p-8">
-                                    <div className="flex justify-between items-start mb-6">
-                                        <div className={`p-3 rounded-xl ${isLocked
+                                <div className="p-4 sm:p-6 md:p-8">
+                                    <div className="flex justify-between items-start mb-4 sm:mb-6">
+                                        <div className={`p-2 sm:p-3 rounded-lg sm:rounded-xl ${isLocked
                                             ? 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500'
                                             : isCompleted
                                                 ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
                                                 : 'bg-pink-50 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400'
                                             }`}>
-                                            {isCompleted ? <CheckCircle size={28} /> : (isLocked ? <Lock size={28} /> : <CheckSquare size={28} />)}
+                                            {isCompleted ? <CheckCircle className="w-6 h-6 sm:w-7 sm:h-7" /> : (isLocked ? <Lock className="w-6 h-6 sm:w-7 sm:h-7" /> : <CheckSquare className="w-6 h-6 sm:w-7 sm:h-7" />)}
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className={`text-sm font-medium px-3 py-1 rounded-full ${isLocked
@@ -266,36 +272,37 @@ const UserQuizInterface: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    <h4 className={`text-xl md:text-2xl font-bold mb-3 ${isLocked ? 'text-slate-400 dark:text-slate-500' : 'text-slate-900 dark:text-white'}`}>
+                                    <h4 className={`text-lg sm:text-xl md:text-2xl font-bold mb-2 sm:mb-3 ${isLocked ? 'text-slate-400 dark:text-slate-500' : 'text-slate-900 dark:text-white'}`}>
                                         {quiz.title}
                                     </h4>
 
-                                    <p className={`text-base mb-6 ${isLocked ? 'text-slate-400 dark:text-slate-600' : 'text-slate-500 dark:text-slate-400'}`}>
+                                    <p className={`text-sm sm:text-base mb-4 sm:mb-6 line-clamp-2 sm:line-clamp-none ${isLocked ? 'text-slate-400 dark:text-slate-600' : 'text-slate-500 dark:text-slate-400'}`}>
                                         {quiz.description}
                                     </p>
 
-                                    <div className={`flex items-center gap-6 text-sm mb-8 ${isLocked ? 'text-slate-400' : 'text-slate-500'}`}>
+                                    <div className={`flex flex-wrap items-center gap-3 sm:gap-6 text-xs sm:text-sm mb-6 sm:mb-8 ${isLocked ? 'text-slate-400' : 'text-slate-500'}`}>
                                         <div className="flex items-center gap-2">
-                                            <Clock size={16} />
+                                            <Clock className="w-4 h-4" />
                                             <span>{quiz.timeLimit || 10} mins</span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <Award size={16} />
+                                            <Award className="w-4 h-4" />
                                             <span>{quiz.questions?.length || 0} Questions</span>
                                         </div>
                                     </div>
 
                                     <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-700">
                                         {isLocked ? (
-                                            <div className="flex items-center text-slate-400 font-medium w-full justify-center py-2">
-                                                <span>Complete previous quiz to unlock</span>
+                                            <div className="flex items-center text-slate-400 text-xs sm:text-sm font-medium w-full justify-center py-2">
+                                                <span className="hidden sm:inline">Complete previous quiz to unlock</span>
+                                                <span className="sm:hidden">Locked</span>
                                             </div>
                                         ) : (
                                             <div className="w-full">
-                                                <div className="flex justify-between items-center mb-4">
+                                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 mb-4">
                                                     <div>
                                                         {bestScore !== null && (
-                                                            <div className="text-sm">
+                                                            <div className="text-xs sm:text-sm">
                                                                 Best Score: <span className={`font-bold ${bestScore >= 80 ? 'text-green-600' : 'text-orange-500'
                                                                     }`}>{bestScore}%</span>
                                                             </div>
@@ -313,9 +320,10 @@ const UserQuizInterface: React.FC = () => {
                                                                 state: { nextQuizId }
                                                             });
                                                         }}
-                                                        className="bg-pink-600 hover:bg-pink-700 text-white"
+                                                        className="bg-pink-600 hover:bg-pink-700 text-white w-full sm:w-auto"
                                                     >
-                                                        {isCompleted ? 'Retake Quiz' : (bestScore !== null ? 'Improve Score' : 'Start Quiz')}
+                                                        <span className="hidden sm:inline">{isCompleted ? 'Retake Quiz' : (bestScore !== null ? 'Improve Score' : 'Start Quiz')}</span>
+                                                        <span className="sm:hidden">{isCompleted ? 'Retake' : (bestScore !== null ? 'Improve' : 'Start')}</span>
                                                     </Button>
                                                 </div>
 
