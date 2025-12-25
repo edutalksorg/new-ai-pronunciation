@@ -36,10 +36,10 @@ const InstructorDashboardPage: React.FC = () => {
     const fetchDashboardStats = async () => {
         try {
             setLoading(true);
-            // Fetch real-time data from API
+            // Fetch instructor-specific data from API with large page size to get all items
             const [topicsRes, quizzesRes] = await Promise.all([
-                topicsService.list(),
-                quizzesService.list()
+                topicsService.getInstructorTopics({ pageSize: 1000, pageNumber: 1 }),
+                quizzesService.getInstructorQuizzes({ pageSize: 1000, pageNumber: 1 })
             ]);
 
             // Extract counts from API responses
