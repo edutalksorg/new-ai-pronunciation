@@ -158,6 +158,12 @@ class SignalRService {
         callLogger.info('Joined call session', { callId });
     }
 
+    public async acceptCallInvitation(callId: string): Promise<void> {
+        callLogger.signalrInvoke('AcceptCallInvitation', { callId });
+        await this.invoke('AcceptCallInvitation', callId);
+        callLogger.info('Accepted call invitation', { callId });
+    }
+
     public async leaveCallSession(callId: string): Promise<void> {
         callLogger.signalrInvoke('LeaveCallSession', { callId });
         await this.invoke('LeaveCallSession', callId);
@@ -303,6 +309,12 @@ class SignalRService {
             const callId = payload.callId || payload.CallId;
             callLogger.info('✅ Call accepted by callee', { callId });
             store.dispatch(setCallStatus('connecting'));
+
+            // Caller joins the session strictly AFTER Callee accepts
+            callLogger.info('Joining session after acceptance', { callId });
+            this.joinCallSession(callId).catch(err => {
+                callLogger.error('Failed to join session after acceptance', err);
+            });
         });
 
         // 3. CallRejected

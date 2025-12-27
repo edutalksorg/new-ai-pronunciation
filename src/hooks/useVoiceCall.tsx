@@ -67,11 +67,8 @@ export const useVoiceCall = () => {
 
             callLogger.stateTransition('idle', 'initiating', callData.id || callData.callId);
 
-            // 3. Join SignalR call session
-            callLogger.signalrInvoke('JoinCallSession', callData.id || callData.callId);
-            await signalRService.joinCallSession(callData.id || callData.callId);
-
-            // 4. Set state to ringing (waiting for response)
+            // 3. Set state to ringing (waiting for response)
+            // Note: We DO NOT join the session yet. We wait for CallAccepted event.
             dispatch(setCallStatus('ringing'));
             callLogger.stateTransition('initiating', 'ringing', callData.id || callData.callId);
 
@@ -121,30 +118,39 @@ export const useVoiceCall = () => {
         try {
             callLogger.info('Accepting call', { callId });
 
-            // 1. Join SignalR group FIRST to ensure we occupy the channel before telling Caller we accepted.
-            // This prevents the "Offer sent before Callee joined group" race condition.
+            // 1. Accept Invitation via SignalR FIRST
+            // This triggers CallAccepted for the Caller, who then waits for us to JoinCallSession
+            callLogger.signalrInvoke('AcceptCallInvitation', callId);
+            await signalRService.acceptCallInvitation(callId);
+            callLogger.info('Accepted invitation via SignalR', { callId });
+
+            // 2. Call API to confirm acceptance (Keep for data consistency/logs if needed, but rely on SignalR for flow)
+            // We do this concurrently or after to ensure SignalR is fast
+            try {
+                callLogger.apiCall('POST', `/calls/${callId}/respond`, true);
+                callsService.respond(callId, true).catch(err => {
+                    callLogger.warning('REST respond failed (likely handled by SignalR)', err);
+                });
+            } catch (ignore) { /* Ignore REST errors if SignalR worked */ }
+
+            // 3. Join SignalR group
+            // Now that we've accepted, we join the session to exchange WebRTC signals
             callLogger.signalrInvoke('JoinCallSession', callId);
             await signalRService.joinCallSession(callId);
-            callLogger.info('Joined SignalR session early to receive Offer', { callId });
+            callLogger.info('Joined SignalR session', { callId });
 
-            // 2. Call API to confirm acceptance (Triggering CallAccepted event to Caller)
-            callLogger.apiCall('POST', `/calls/${callId}/respond`, true);
-            const response: any = await callsService.respond(callId, true);
-            callLogger.apiResponse(`/calls/${callId}/respond`, true, response);
-
-            const callData = response.data || response;
-
-            // 3. Update Redux state
+            // 4. Update Redux state
+            // We don't have the full response from REST if we skip waiting for it, so we rely on current user + invitation data
             dispatch(acceptCallAction({
                 callId: callId,
-                callerId: callData.callerId || '',
-                callerName: callData.callerName || incomingInvitation?.callerName || 'Caller',
-                callerAvatar: callData.callerAvatar || incomingInvitation?.callerAvatar,
+                callerId: incomingInvitation?.callerName || '', // Fallback, we might not have ID here easily without REST response
+                callerName: incomingInvitation?.callerName || 'Caller',
+                callerAvatar: incomingInvitation?.callerAvatar,
                 calleeId: user?.id || '',
                 calleeName: user?.fullName || 'Me',
                 calleeAvatar: user?.avatar,
                 status: 'accepted',
-                initiatedAt: callData.initiatedAt || new Date().toISOString(),
+                initiatedAt: new Date().toISOString(),
             }));
 
             callLogger.stateTransition('incoming', 'connecting', callId);

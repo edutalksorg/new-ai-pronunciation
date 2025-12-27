@@ -218,9 +218,24 @@ const UserProfile: React.FC = () => {
 
             // Optional: Re-fetch silently if needed, but we trust the update
             // fetchProfile(); 
-        } catch (error) {
-            console.error('Update profile failed:', error);
-            dispatch(showToast({ message: 'Failed to update profile', type: 'error' }));
+        } catch (error: any) {
+            console.error('Update profile failed details:', JSON.stringify(error?.response?.data || {}, null, 2));
+
+            let errorMessage = error?.response?.data?.message ||
+                error?.response?.data?.title ||
+                error?.message ||
+                'Failed to update profile';
+
+            if (error?.response?.status === 403) {
+                // If backend provided no detailed message, give a helpful hint
+                if (!error?.response?.data?.message && !error?.response?.data?.title) {
+                    errorMessage = 'Permission denied. (Note: Demo/Admin accounts may be read-only)';
+                } else {
+                    errorMessage = `Permission denied (403): ${errorMessage}`;
+                }
+            }
+
+            dispatch(showToast({ message: errorMessage, type: 'error' }));
         }
     };
 
