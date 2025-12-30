@@ -367,7 +367,7 @@
         "reqUppercase": "कम से कम 1 बड़ा अक्षर",
         "reqLowercase": "कम से कम 1 छोटा अक्षर",
         "reqNumber": "कम से कम 1 संख्या",
-        "reqSpecial": "कम से कम 1 विशेष अक्षर (!@#$%^&*)",
+        "reqSpecial": "कम से कम 1 विशेष अक्षर (!@#$%^\u0026*)",
         "validation": {
             "emailInvalid": "अमान्य ईमेल पता",
             "passwordRequired": "पासवर्ड आवश्यक है",
@@ -377,9 +377,9 @@
             "passwordUppercase": "पासवर्ड में कम से कम एक बड़ा अक्षर होना चाहिए",
             "passwordLowercase": "पासवर्ड में कम से कम एक छोटा अक्षर होना चाहिए",
             "passwordNumber": "पासवर्ड में कम से कम एक संख्या होनी चाहिए",
-            "passwordSpecial": "पासवर्ड में कम से कम एक विशेष अक्षर होना चाहिए (!@#$%^&*)",
+            "passwordSpecial": "पासवर्ड में कम से कम एक विशेष अक्षर होना चाहिए (!@#$%^\u0026*)",
             "passwordMatch": "पासवर्ड मेल नहीं खाते",
-            "roleFixed": "सार्वजनिक पंजीकरण के लिए भूमिका 'उपयोगकर्ता' तय की गई है"
+            "roleFixed": "सार्वजनिक पंजीकरण के लिए भूमिका \u0027उपयोगकर्ता\u0027 तय की गई है"
         }
     },
     "messages": {
@@ -501,6 +501,83 @@
         "errorLoad": "रेफरल डेटा लोड करने में विफल"
     },
     "landing": {
+        "features": {
+            "voiceCalling": {
+                "cta": "Start a Call",
+                "title": "Voice Calling",
+                "description": "Practice speaking with other learners in real-time WebRTC calls.",
+                "bullets": [
+                    "Real-time P2P audio",
+                    "Smart partner matching",
+                    "Topic suggestions during calls"
+                ]
+            },
+            "title": "Our Features",
+            "dailyTopics": {
+                "cta": "Explore Topics",
+                "title": "Daily Topics",
+                "description": "Learn new topics every day to improve your English vocabulary and grammar.",
+                "bullets": [
+                    "Curated daily topics",
+                    "Vocabulary suggestions",
+                    "Level-based categorization"
+                ]
+            },
+            "dailyQuizzes": {
+                "cta": "Take a Quiz",
+                "title": "Daily Quizzes",
+                "description": "Test your knowledge with engaging and interactive quizzes daily.",
+                "bullets": [
+                    "Instant feedback",
+                    "Various difficulty levels",
+                    "Track your mastery"
+                ]
+            },
+            "aiPronunciation": {
+                "cta": "Analyze Voice",
+                "title": "AI Pronunciation",
+                "description": "Perfect your pronunciation with AI-powered feedback and real-time analysis.",
+                "bullets": [
+                    "Visual sound wave analysis",
+                    "Accuracy scoring",
+                    "Phoneme-level feedback"
+                ]
+            }
+        },
+        "cta": {
+            "title": "Start Learning Today",
+            "description": "Join thousands of English learners and start your journey to fluency.",
+            "button": "Create Free Account"
+        },
+        "footer": {
+            "bottomBarText": " 2024 EduTalks. All rights reserved.",
+            "stayUpdated": {
+                "placeholder": "Enter your email",
+                "title": "Stay Updated",
+                "subtitle": "Subscribe to our newsletter for daily tips."
+            },
+            "brandDesc": "Master English. Connect with the World. Join thousands of learners improving their English through real conversations and AI-powered feedback.",
+            "legal": {
+                "privacy": "Privacy Policy",
+                "terms": "Terms of Service",
+                "cookie": "Cookie Policy"
+            },
+            "product": {
+                "title": "Product",
+                "dailyTopics": "Daily Topics",
+                "pricing": "Pricing",
+                "pronunciation": "Pronunciation AI",
+                "voiceRooms": "Voice Rooms"
+            },
+            "madeWith": "Made with  for English learners worldwide",
+            "company": {
+                "blog": "Blog",
+                "title": "Company",
+                "careers": "Careers",
+                "successStories": "Success Stories",
+                "about": "About Us"
+            }
+        },
         "nav": {
             "login": "लॉगिन",
             "getStarted": "शुरू करें"
@@ -513,50 +590,28 @@
             "alreadyHaveAccount": "क्या आपके पास पहले से खाता है?",
             "trialText": "🎁 24 घंटे का निःशुल्क परीक्षण प्राप्त करें - किसी क्रेडिट कार्ड की आवश्यकता नहीं है"
         },
-        "features": {
-            "title": "हमारी विशेषताएं",
-            "aiPronunciation": {
-                "title": "AI उच्चारण",
-                "description": "AI-संचालित प्रतिक्रिया और वास्तविक समय विश्लेषण के साथ अपने उच्चारण को सही करें।"
-            },
-            "dailyTopics": {
-                "title": "दैनिक विषय",
-                "description": "अपनी अंग्रेजी शब्दावली और व्याकरण को बेहतर बनाने के लिए हर दिन नए विषय सीखें।"
-            },
-            "voiceCalling": {
-                "title": "वॉइस कॉलिंग",
-                "description": "वास्तविक समय के WebRTC कॉल में अन्य शिक्षार्थियों के साथ बोलने का अभ्यास करें।"
-            },
-            "dailyQuizzes": {
-                "title": "दैनिक क्विज़",
-                "description": "दैनिक आकर्षक और इंटरैक्टिव क्विज़ के साथ अपने ज्ञान का परीक्षण करें।"
-            }
-        },
         "stats": {
-            "activeLearners": "सक्रिय शिक्षार्थी",
-            "dailyTopics": "दैनिक विषय",
-            "quizQuestions": "क्विज़ प्रश्न"
+            "dailyTopics": "Daily Topics",
+            "quizQuestions": "Quiz Questions",
+            "activeLearners": "Active Learners"
         },
-        "cta": {
-            "title": "आज ही सीखना शुरू करें",
-            "description": "हजारों अंग्रेजी शिक्षार्थियों के साथ जुड़ें और प्रवाह की ओर अपनी यात्रा शुरू करें।",
-            "button": "मुफ्त खाता बनाएं"
-        },
-        "footer": {
-            "brandDesc": "अंग्रेजी में महारत हासिल करें। दुनिया से जुड़ें। उन हजारों शिक्षार्थियों में शामिल हों जो वास्तविक बातचीत और AI-संचालित प्रतिक्रिया के माध्यम से अपनी अंग्रेजी में सुधार कर रहे हैं।",
-            "product": "उत्पाद",
-            "pricing": "मूल्य निर्धारण",
-            "security": "सुरक्षा",
-            "company": "कंपनी",
-            "about": "हमारे बारे में",
-            "blog": "ब्लॉग",
-            "careers": "करियर",
-            "legal": "कानूनी",
-            "privacy": "गोपनीयता",
-            "terms": "शर्तें",
-            "contact": "संपर्क",
-            "copyright": "© 2024 EduTalks. सर्वाधिकार सुरक्षित।",
-            "madeWith": "❤️ के साथ भारत में बनाया गया"
+        "community": {
+            "title": "Join Our Global Community",
+            "description": "Connect with thousands of learners, practice real conversations, and make friends from around the world.",
+            "cards": {
+                "listening": {
+                    "description": "Practice with native audio",
+                    "title": "Immersive Listening"
+                },
+                "connections": {
+                    "description": "Make friends \u0026 learn together",
+                    "title": "Real Connections"
+                },
+                "learning": {
+                    "description": "Master topics daily",
+                    "title": "Structured Learning"
+                }
+            }
         }
     }
 }
