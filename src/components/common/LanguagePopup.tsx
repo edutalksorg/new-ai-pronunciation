@@ -64,7 +64,7 @@ export const LanguagePopup: React.FC = () => {
 
                 <div className="p-4 max-h-[60vh] overflow-y-auto">
                     <div className="grid grid-cols-1 gap-2">
-                        {LANGUAGES.filter(lang => lang.code !== 'en').map((lang) => (
+                        {LANGUAGES.map((lang) => (
                             <button
                                 key={lang.code}
                                 onClick={() => setSelectedLang(lang.code)}

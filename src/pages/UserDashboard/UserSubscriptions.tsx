@@ -348,11 +348,14 @@ const UserSubscriptions: React.FC = () => {
                         const currentPlanId = currentSub?.planId || currentSub?.plan?.id || currentSub?.plan?._id;
                         const thisPlanId = plan.id || plan._id;
                         let isNameMatch = false;
-                        if (currentSub?.planName && plan.name) isNameMatch = currentSub.planName.toLowerCase() === plan.name.toLowerCase();
+                        const currentPlanName = currentSub?.planName || currentSub?.plan?.name;
+                        if (currentPlanName && plan.name) isNameMatch = currentPlanName.toLowerCase() === plan.name.toLowerCase();
                         else if (currentSub?.isFreeTrial && plan.name?.toLowerCase().includes('free trial')) isNameMatch = true;
 
                         const isCurrentPlan = currentPlanId === thisPlanId || isNameMatch;
-                        const isSubActive = ['active', 'trialing', 'succeeded', 'year'].includes(currentSub?.status?.toLowerCase());
+                        // normalize status to lowercase for comparison
+                        const subStatus = currentSub?.status?.toLowerCase();
+                        const isSubActive = ['active', 'trialing', 'succeeded', 'year'].includes(subStatus);
                         const isLocked = isCurrentPlan && isSubActive;
 
                         return (
@@ -441,16 +444,33 @@ const UserSubscriptions: React.FC = () => {
                                         }
                                     })()}
 
-                                    <Button
-                                        className={`w-full py-4 rounded-xl font-bold shadow-lg transition-all ${isLocked ? 'bg-slate-100 text-slate-500 cursor-not-allowed' :
-                                                isYearlyPlan ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white shadow-violet-500/30' :
-                                                    'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90'
-                                            }`}
-                                        disabled={isLocked}
-                                        onClick={() => handleSubscribe(plan)}
-                                    >
-                                        {isLocked ? t('subscriptionsPageView.currentPlan') : isCurrentPlan ? t('subscriptionsPageView.renewPlan') : t('subscriptionsPageView.choosePlan')}
-                                    </Button>
+                                    {(() => {
+                                        const isFreeTrialPlan = plan.name?.toLowerCase().includes('free trial');
+                                        const isPlanUsed = isLocked || (isFreeTrialPlan && (isSubActive || isExplicitlyCancelled || !!currentSub));
+
+                                        return (
+                                            <Button
+                                                className={`w-full py-4 rounded-xl font-bold shadow-lg transition-all ${isLocked ? 'bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 cursor-default' :
+                                                    (isPlanUsed && isFreeTrialPlan) ? 'bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700 cursor-not-allowed' :
+                                                        isYearlyPlan ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white shadow-violet-500/30' :
+                                                            'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90'
+                                                    }`}
+                                                disabled={isPlanUsed}
+                                                onClick={() => handleSubscribe(plan)}
+                                            >
+                                                {isLocked ? (
+                                                    <span className="flex items-center justify-center gap-2">
+                                                        <Check className="w-5 h-5" />
+                                                        {isFreeTrialPlan
+                                                            ? t('subscriptionsPageView.planUsed')
+                                                            : t('subscriptionsPageView.activePlan')}
+                                                    </span>
+                                                ) : isPlanUsed && isFreeTrialPlan ? (
+                                                    t('subscriptionsPageView.planUsed')
+                                                ) : isCurrentPlan ? t('subscriptionsPageView.renewPlan') : t('subscriptionsPageView.choosePlan')}
+                                            </Button>
+                                        );
+                                    })()}
                                 </div>
                             </div>
                         )

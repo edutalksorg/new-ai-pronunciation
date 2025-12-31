@@ -154,8 +154,8 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
                                 </button>
 
                                 {profileOpen && (
-                                    <div className="glass-card absolute right-0 mt-3 w-64 rounded-xl shadow-2xl py-2 z-50 animate-slideUp origin-top-right overflow-hidden">
-                                        <div className="px-4 py-4 border-b border-slate-200/50 dark:border-white/10 mb-2 bg-slate-50/50 dark:bg-slate-900/50">
+                                    <div className="absolute right-0 mt-3 w-64 rounded-xl shadow-2xl py-2 z-50 animate-slideUp origin-top-right overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                        <div className="px-4 py-4 border-b border-slate-200 dark:border-slate-800 mb-2 bg-slate-50 dark:bg-slate-900">
                                             <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
                                                 {user?.fullName}
                                             </p>
@@ -180,7 +180,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
                                             ))}
                                         </div>
 
-                                        <div className="mt-2 border-t border-slate-200/50 dark:border-white/10 pt-2">
+                                        <div className="mt-2 border-t border-slate-200 dark:border-slate-800 pt-2">
                                             <button
                                                 onClick={() => { setProfileOpen(false); handleLogout(); }}
                                                 className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-500/10 transition-colors"
