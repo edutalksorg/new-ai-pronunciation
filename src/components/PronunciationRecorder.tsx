@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Mic, StopCircle, RotateCcw, Send, Volume2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { pronunciationService } from '../services/pronunciation';
 import { formatTime } from '../utils/helpers';
 import Button from './Button';
@@ -22,6 +23,7 @@ export const PronunciationRecorder: React.FC<PronunciationRecorderProps> = ({
   onNext,
   showNextButton = false,
 }) => {
+  const { t } = useTranslation();
   const [isRecording, setIsRecording] = useState(false);
   const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -546,7 +548,7 @@ export const PronunciationRecorder: React.FC<PronunciationRecorderProps> = ({
             {/* Instructions */}
             {!isRecording && !recordedAudio && (
               <div className="text-center text-slate-400 text-sm">
-                <p>Click the button above to start recording. Read the text clearly and naturally.</p>
+                <p>{t('pronunciation.recordingInstructions')}</p>
               </div>
             )}
           </div>
@@ -611,12 +613,12 @@ export const PronunciationRecorder: React.FC<PronunciationRecorderProps> = ({
 
         {/* Tips */}
         <div className="bg-slate-700/50 rounded-lg p-4">
-          <h3 className="text-sm font-semibold text-slate-300 mb-2">Recording Tips:</h3>
+          <h3 className="text-sm font-semibold text-slate-300 mb-2">{t('pronunciation.recordingTips')}</h3>
           <ul className="space-y-1 text-sm text-slate-400">
-            <li>• Speak clearly and at a natural pace</li>
-            <li>• Avoid background noise for better accuracy</li>
-            <li>• Make sure your microphone is working properly</li>
-            <li>• Pause briefly between sentences if needed</li>
+            <li>• {t('pronunciation.tipSpeakClearly')}</li>
+            <li>• {t('pronunciation.tipAvoidNoise')}</li>
+            <li>• {t('pronunciation.tipCheckMicrophone')}</li>
+            <li>• {t('pronunciation.tipPauseSentences')}</li>
           </ul>
         </div>
       </div>

@@ -119,7 +119,8 @@
         "totalQuizzes": "ਕੁੱਲ ਕੁਇਜ਼ਾਂ",
         "deleteSuccess": "ਕਵਿਜ਼ ਸਫਲਤਾਪੂਰਵਕ ਹਟਾਈ ਗਈ",
         "publishSuccess": "ਕਵਿਜ਼ ਸਫਲਤਾਪੂਰਵਕ ਪ੍ਰਕਾਸ਼ਿਤ ਕੀਤੀ ਗਈ!",
-        "unpublishSuccess": "ਕਵਿਜ਼ ਪ੍ਰਕਾਸ਼ਨ ਸਫਲਤਾਪੂਰਵਕ ਰੱਦ ਕੀਤਾ ਗਿਆ"
+        "unpublishSuccess": "ਕਵਿਜ਼ ਪ੍ਰਕਾਸ਼ਨ ਸਫਲਤਾਪੂਰਵਕ ਰੱਦ ਕੀਤਾ ਗਿਆ",
+        "yourMastery": "ਤੁਹਾਡੀ ਮੁਹਾਰਤ"
     },
     "topic": {
         "title": "ਵਿਸ਼ੇ",
@@ -186,7 +187,19 @@
         "unlocked": "ਅਨਲੌਕ ਕੀਤਾ",
         "greatJob": "ਬਹੁਤ ਵਧੀਆ! ਸ਼ੁੱਧਤਾ",
         "nextUnlocked": "ਅਗਲਾ ਪੈਰਾ ਅਨਲੌਕ ਹੋ ਗਿਆ!",
-        "tryReach": "75% ਤੱਕ ਪਹੁੰਚਣ ਲਈ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ!"
+        "tryReach": "75% ਤੱਕ ਪਹੁੰਚਣ ਲਈ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ!",
+        "masterSkills": "ਆਪਣੀ ਬੋਲਣ ਦੀ ਹੁਨਰ ਨੂੰ ਮਾਸਟਰ ਕਰੋ",
+        "paragraph": "ਪੈਰਾਗ੍ਰਾਫ",
+        "courseContent": "ਕੋਰਸ ਸਮੱਗਰੀ",
+        "page": "ਪੰਨਾ",
+        "prev": "ਪਿਛਲਾ",
+        "next": "ਅਗਲਾ",
+        "recordingTips": "ਰਿਕਾਰਡਿੰਗ ਟਿਪਸ:",
+        "tipSpeakClearly": "ਸਪੱਸ਼ਟ ਅਤੇ ਕੁਦਰਤੀ ਗਤੀ ਨਾਲ ਬੋਲੋ",
+        "tipAvoidNoise": "ਬਿਹਤਰ ਸਟੀਕਤਾ ਲਈ ਪਿਛੋਕੜ ਦੇ ਸ਼ੋਰ ਤੋਂ ਬਚੋ",
+        "tipCheckMicrophone": "ਯਕੀਨੀ ਬਣਾਓ ਕਿ ਤੁਹਾਡਾ ਮਾਈਕ੍ਰੋਫੋਨ ਸਹੀ ਢੰਗ ਨਾਲ ਕੰਮ ਕਰ ਰਿਹਾ ਹੈ",
+        "tipPauseSentences": "ਜੇ ਲੋੜ ਹੋਵੇ ਤਾਂ ਵਾਕਾਂ ਵਿਚਕਾਰ ਥੋੜਾ ਜਿਹਾ ਵਿਰਾਮ ਲਓ",
+        "recordingInstructions": "ਰਿਕਾਰਡਿੰਗ ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਉੱਪਰ ਦਿੱਤੇ ਬਟਨ 'ਤੇ ਕਲਿੱਕ ਕਰੋ। ਟੈਕਸਟ ਨੂੰ ਸਪੱਸ਼ਟ ਅਤੇ ਕੁਦਰਤੀ ਢੰਗ ਨਾਲ ਪੜ੍ਹੋ।"
     },
     "voiceCall": {
         "title": "ਵੌਇਸ ਕਾਲ",
@@ -236,7 +249,19 @@
         "unmute": "ਅਨਮਿਊਟ",
         "connected": "ਜੁੜਿਆ",
         "disconnected": "ਡਿਸਕਨੈਕਟ ਕੀਤਾ",
-        "remainingTime": "ਬਾਕੀ ਸਮਾਂ"
+        "remainingTime": "ਬਾਕੀ ਸਮਾਂ",
+        "premiumActive": "ਪ੍ਰੀਮੀਅਮ ਸਰਗਰਮ",
+        "limit": "ਸੀਮਾ",
+        "onlineStatus": "ਔਨਲਾਈਨ",
+        "noOtherUsers": "ਕੋਈ ਹੋਰ ਉਪਭੋਗਤਾ ਔਨਲਾਈਨ ਨਹੀਂ ਹਨ.",
+        "voiceCallLabel": "ਵੌਇਸ ਕਾਲ",
+        "ended": "ਸਮਾਪਤ",
+        "connecting": "ਕਨੈਕਟ ਹੋ ਰਿਹਾ ਹੈ...",
+        "errorInitiating": "ਕਾਲ ਸ਼ੁਰੂ ਕਰਨ ਵਿੱਚ ਅਸਫਲ",
+        "pending": "ਬਕਾਇਆ",
+        "failed": "ਅਸਫਲ",
+        "ringing": "ਘੰਟੀ ਵੱਜ ਰਹੀ ਹੈ",
+        "declined": "ਅਸਵੀਕਾਰ"
     },
     "profilePage": {
         "updateSuccess": "ਪ੍ਰੋਫਾਈਲ ਸਫਲਤਾਪੂਰਵਕ ਅੱਪਡੇਟ ਹੋ ਗਈ!",
@@ -455,6 +480,7 @@
         "reward": "ਇਨਾਮ",
         "anonymousUser": "ਅਗਿਆਤ ਉਪਭੋਗਤਾ",
         "pending": "ਬਕਾਇਆ",
+        "completed": "ਪੂਰਾ ਹੋਇਆ",
         "noReferrals": "ਅਜੇ ਤੱਕ ਕੋਈ ਹਵਾਲਾ ਨਹੀਂ। ਆਪਣਾ ਲਿੰਕ ਸਾਂਝਾ ਕਰੋ!",
         "loading": "ਰੈਫਰਲ ਪ੍ਰੋਗਰਾਮ ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ...",
         "errorLoad": "ਰੈਫਰਲ ਡਾਟਾ ਲੋਡ ਕਰਨ ਵਿੱਚ ਅਸਫਲ"

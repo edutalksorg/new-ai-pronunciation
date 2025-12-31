@@ -332,7 +332,7 @@ const UserVoiceCall: React.FC = () => {
                     </div>
 
                     {/* Right: Stats Table / Info */}
-                    <div className="glass-panel p-6 rounded-3xl space-y-6 flex flex-col max-h-[500px]">
+                    <div className="glass-panel p-6 rounded-3xl space-y-6 flex flex-col h-[500px]">
                         <div className="flex items-center justify-between pb-4 border-b border-slate-200/50 dark:border-white/10">
                             <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                                 <Clock className="w-4 h-4 text-violet-500" />
@@ -345,7 +345,7 @@ const UserVoiceCall: React.FC = () => {
                             {hasActiveSubscription ? (
                                 <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-2xl text-center">
                                     <span className="text-lg font-bold text-green-600 dark:text-green-400 block mb-1">{t('voiceCall.unlimited')}</span>
-                                    <span className="text-xs text-green-700/70 dark:text-green-300/70">Premium Active</span>
+                                    <span className="text-xs text-green-700/70 dark:text-green-300/70">{t('voiceCall.premiumActive')}</span>
                                 </div>
                             ) : (
                                 <>
@@ -363,7 +363,7 @@ const UserVoiceCall: React.FC = () => {
                                     </div>
                                     <div className="flex justify-between text-xs text-slate-400 mt-2">
                                         <span>0m</span>
-                                        <span>{Math.floor(voiceCallLimitSeconds / 60)}m Limit</span>
+                                        <span>{Math.floor(voiceCallLimitSeconds / 60)}m {t('voiceCall.limit')}</span>
                                     </div>
                                 </>
                             )}
@@ -379,12 +379,12 @@ const UserVoiceCall: React.FC = () => {
                                         </div>
                                         <div>
                                             <p className="text-sm font-semibold text-slate-900 dark:text-white">{u.fullName}</p>
-                                            <p className="text-xs text-green-500 font-medium">Online</p>
+                                            <p className="text-xs text-green-500 font-medium">{t('voiceCall.onlineStatus')}</p>
                                         </div>
                                     </div>
                                 ))}
                                 {availableUsers.length === 0 && (
-                                    <p className="text-sm text-slate-400 text-center py-4 italic">No other users online.</p>
+                                    <p className="text-sm text-slate-400 text-center py-4 italic">{t('voiceCall.noOtherUsers')}</p>
                                 )}
                             </div>
                         </div>
@@ -393,11 +393,11 @@ const UserVoiceCall: React.FC = () => {
             )}
 
             {activeTab === 'history' && (
-                <div className="glass-panel p-1 rounded-2xl overflow-hidden">
+                <div className="glass-panel p-6 rounded-3xl space-y-6 flex flex-col h-[500px]">
                     {loading ? (
-                        <div className="py-20 text-center text-slate-500 animate-pulse">{t('voiceCall.loadingHistory')}</div>
+                        <div className="flex-1 flex items-center justify-center text-slate-500 animate-pulse">{t('voiceCall.loadingHistory')}</div>
                     ) : history.length > 0 ? (
-                        <div className="divide-y divide-slate-200/50 dark:divide-white/5">
+                        <div className="divide-y divide-slate-200/50 dark:divide-white/5 flex-1 overflow-y-auto pr-2 custom-scrollbar">
                             {history.map((call) => {
                                 const startTime = call.initiatedAt || call.startTime;
                                 const duration = call.durationSeconds !== undefined ? call.durationSeconds : call.duration;
@@ -406,15 +406,16 @@ const UserVoiceCall: React.FC = () => {
                                 return (
                                     <div key={call.callId} className="p-4 hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors flex items-center justify-between group">
                                         <div className="flex items-center gap-4">
-                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${status === 'Completed' ? 'bg-green-500/10 text-green-500' :
-                                                status === 'Missed' ? 'bg-red-500/10 text-red-500' :
-                                                    'bg-slate-500/10 text-slate-500'
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${['missed', 'failed', 'declined'].includes(status.toLowerCase()) ? 'bg-red-500/10 text-red-500' :
+                                                    status.toLowerCase() === 'completed' ? 'bg-green-500/10 text-green-500' :
+                                                        ['pending', 'ringing'].includes(status.toLowerCase()) ? 'bg-yellow-500/10 text-yellow-500' :
+                                                            'bg-slate-500/10 text-slate-500'
                                                 }`}>
                                                 {isIncoming ? <ArrowLeft size={18} className="rotate-45" /> : <Phone size={18} />}
                                             </div>
                                             <div>
                                                 <h4 className="font-semibold text-slate-900 dark:text-white group-hover:text-violet-500 transition-colors">
-                                                    Voice Call
+                                                    {t('voiceCall.voiceCallLabel')}
                                                 </h4>
                                                 <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                                                     <span>{new Date(startTime?.endsWith('Z') ? startTime : `${startTime}Z`).toLocaleDateString()}</span>
@@ -428,10 +429,14 @@ const UserVoiceCall: React.FC = () => {
                                                 <Clock size={12} />
                                                 {Math.floor(duration / 60)}:{String(duration % 60).padStart(2, '0')}
                                             </div>
-                                            <p className={`text-xs mt-1 font-medium ${status === 'Missed' ? 'text-red-500' :
-                                                status === 'Completed' ? 'text-green-500' : 'text-slate-500'
+                                            <p className={`text-xs mt-1 font-medium ${['missed', 'failed', 'declined'].includes(status.toLowerCase()) ? 'text-red-500' :
+                                                    status.toLowerCase() === 'completed' ? 'text-green-500' :
+                                                        ['pending', 'ringing'].includes(status.toLowerCase()) ? 'text-yellow-500' :
+                                                            'text-slate-500'
                                                 }`}>
-                                                {status}
+                                                {(['ended', 'completed', 'missed', 'pending', 'failed', 'ringing', 'declined', 'busy'].includes(status.toLowerCase()))
+                                                    ? t(`voiceCall.${status.toLowerCase()}`)
+                                                    : status}
                                             </p>
                                         </div>
                                     </div>
@@ -439,7 +444,7 @@ const UserVoiceCall: React.FC = () => {
                             })}
                         </div>
                     ) : (
-                        <div className="py-20 flex flex-col items-center justify-center text-slate-400">
+                        <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
                             <History size={48} className="mb-4 opacity-50" />
                             <p>{t('voiceCall.noHistory')}</p>
                         </div>

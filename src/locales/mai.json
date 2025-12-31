@@ -119,7 +119,8 @@
         "totalQuizzes": "कुल क्विज",
         "deleteSuccess": "क्विज सफलतापूर्वक मेटा देल गेल",
         "publishSuccess": "क्विज सफलतापूर्वक प्रकाशित!",
-        "unpublishSuccess": "क्विज अप्रकाशित क देल गेल"
+        "unpublishSuccess": "क्विज अप्रकाशित क देल गेल",
+        "yourMastery": "अहाँक निपुणता"
     },
     "topic": {
         "title": "विषय सभ",
@@ -186,7 +187,19 @@
         "unlocked": "अनलॉक भेल",
         "greatJob": "बहुत नीक! सटीकता",
         "nextUnlocked": "अगला पैराग्राफ अनलॉक भ गेल!",
-        "tryReach": "75% तक पहुँचै लेल फेर स कोशिश करू!"
+        "tryReach": "75% तक पहुँचै लेल फेर स कोशिश करू!",
+        "masterSkills": "अपन बजै केर कौशल केँ मास्टर करू",
+        "paragraph": "पैराग्राफ",
+        "courseContent": "कोर्स सामग्री",
+        "page": "पृष्ठ",
+        "prev": "पिछला",
+        "next": "अगिला",
+        "recordingTips": "रिकॉर्डिंग टिप्स:",
+        "tipSpeakClearly": "स्पष्ट आ प्राकृतिक गतिसँ बाजू",
+        "tipAvoidNoise": "बेहतर सटीकता लेल पृष्ठभूमि शोर सँ बचू",
+        "tipCheckMicrophone": "सुनिश्चित करू जे अहाँक माइक्रोफोन ठीक सँ काज क रहल अछि",
+        "tipPauseSentences": "आवश्यकता पड़ला पर वाक्य सभक बीच थोड़ विराम लिअ",
+        "recordingInstructions": "रिकॉर्डिंग शुरू करै लेल उपर देल गेल बटन पर क्लिक करू। पाठ केँ स्पष्ट आ प्राकृतिक रूप सँ पढ़ू।"
     },
     "voiceCall": {
         "title": "वॉयस कॉल",
@@ -236,7 +249,19 @@
         "unmute": "अनम्यूट",
         "connected": "कनेक्टेड",
         "disconnected": "डिस्कनेक्टेड",
-        "remainingTime": "बाकी समय"
+        "remainingTime": "बाकी समय",
+        "premiumActive": "प्रीमियम सक्रिय",
+        "limit": "सीमा",
+        "onlineStatus": "ऑनलाइन",
+        "noOtherUsers": "आन कोनो उपयोगकर्ता ऑनलाइन नहि अछि.",
+        "voiceCallLabel": "वॉइस कॉल",
+        "ended": "समाप्त",
+        "connecting": "कनेक्ट भऽ रहल अछि...",
+        "errorInitiating": "कॉल शुरू करबामे असफल",
+        "pending": "विचाराधीन",
+        "failed": "असफल",
+        "ringing": "घंटी बाजि रहल अछि",
+        "declined": "अस्वीकृत"
     },
     "profilePage": {
         "updateSuccess": "प्रोफाइल सफलतापूर्वक अपडेट कएल गेल!",
@@ -454,8 +479,9 @@
         "status": "स्थिति",
         "reward": "इनाम",
         "anonymousUser": "अनाम यूजर",
-        "pending": "पेंडिंग",
-        "noReferrals": "कोनो रेफरल नहि। लिंक शेयर करू!",
+        "pending": "लंबित",
+        "completed": "पूरा",
+        "noReferrals": "एखन धरि कोनो रेफरल नहि। अपना लिंक साझा करू!",
         "loading": "लोड भ रहल अछि...",
         "errorLoad": "लोड नहि भेल"
     },

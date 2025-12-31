@@ -171,11 +171,11 @@ const UserReferrals: React.FC = () => {
                                         <td className="py-4 px-6 font-bold text-slate-900 dark:text-white">{item.refereeName || 'Anonymous User'}</td>
                                         <td className="py-4 px-6 text-slate-500 font-medium">{new Date(item.createdAt).toLocaleDateString()}</td>
                                         <td className="py-4 px-6">
-                                            <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${item.status === 'converted'
-                                                    ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20'
-                                                    : 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20'
+                                            <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${['converted', 'completed'].includes((item.status || '').toLowerCase())
+                                                ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20'
+                                                : 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20'
                                                 }`}>
-                                                {item.status || t('referrals.pending')}
+                                                {item.status ? t(`referrals.${item.status.toLowerCase()}`) : t('referrals.pending')}
                                             </span>
                                         </td>
                                         <td className="py-4 px-6 text-right font-bold text-green-600 dark:text-green-400">

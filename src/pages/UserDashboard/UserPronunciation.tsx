@@ -121,14 +121,14 @@ const UserPronunciation: React.FC = () => {
                             {t('pronunciation.title')}
                         </h3>
                         <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
-                            Master your speaking skills
+                            {t('pronunciation.masterSkills')}
                         </p>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-3 bg-white/50 dark:bg-slate-800/50 px-4 py-2 rounded-xl border border-slate-200/50 dark:border-white/10 backdrop-blur-md relative z-10">
                     <div className="flex flex-col items-end">
-                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Progress</span>
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('pronunciation.progress')}</span>
                         <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
                             {paragraphs.length > 0 ? `${currentParaIndex + 1} / ${paragraphs.length}` : '0 / 0'}
                         </span>
@@ -158,7 +158,7 @@ const UserPronunciation: React.FC = () => {
                                         <div className="mb-6 flex justify-between items-center">
                                             <div className="bg-slate-100 dark:bg-slate-800/50 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700/50">
                                                 <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                                                    Paragraph {currentParaIndex + 1}
+                                                    {t('pronunciation.paragraph')} {currentParaIndex + 1}
                                                 </span>
                                             </div>
                                             {practiceComplete && (
@@ -182,12 +182,12 @@ const UserPronunciation: React.FC = () => {
                                         <div className="w-24 h-24 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mb-8 animate-bounce shadow-xl shadow-red-500/20">
                                             <Clock className="w-12 h-12" />
                                         </div>
-                                        <h3 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">Trial Ended</h3>
+                                        <h3 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">{t('pronunciation.trialEnded')}</h3>
                                         <p className="text-lg text-slate-600 dark:text-slate-300 mb-10 max-w-md leading-relaxed">
-                                            Your 24-hour preview has expired. Unlock unlimited pronunciation practice with Pro.
+                                            {t('pronunciation.trialExpiredMessage')}
                                         </p>
                                         <Button className="py-4 px-10 text-lg bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 shadow-xl shadow-pink-500/30 rounded-xl" onClick={triggerUpgradeModal}>
-                                            Upgrade to Pro
+                                            {t('pronunciation.upgradeToPro')}
                                         </Button>
                                     </div>
                                 )}
@@ -204,10 +204,10 @@ const UserPronunciation: React.FC = () => {
                                     <span className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
                                         <CheckCircle className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                                     </span>
-                                    Course Content
+                                    {t('pronunciation.courseContent')}
                                 </div>
                                 <span className="text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
-                                    Page {sidebarPage + 1} / {Math.ceil(paragraphs.length / ITEMS_PER_PAGE) || 1}
+                                    {t('pronunciation.page')} {sidebarPage + 1} / {Math.ceil(paragraphs.length / ITEMS_PER_PAGE) || 1}
                                 </span>
                             </h4>
 
@@ -248,7 +248,7 @@ const UserPronunciation: React.FC = () => {
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className={`text-sm font-semibold truncate mb-1 ${isActive ? 'text-white' : ''}`}>
-                                                        Paragraph {index + 1}
+                                                        {t('pronunciation.paragraph')} {index + 1}
                                                     </p>
                                                     <p className={`text-xs truncate ${isActive ? 'text-white/80' : 'text-slate-500 dark:text-slate-400'}`}>
                                                         {para.text || para.content || "Practice text..."}
@@ -280,7 +280,7 @@ const UserPronunciation: React.FC = () => {
                                             : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                                             }`}
                                     >
-                                        <ChevronLeft size={16} /> Prev
+                                        <ChevronLeft size={16} /> {t('pronunciation.prev')}
                                     </button>
                                     <button
                                         onClick={() => setSidebarPage(prev => Math.min(Math.ceil(paragraphs.length / ITEMS_PER_PAGE) - 1, prev + 1))}
@@ -290,7 +290,7 @@ const UserPronunciation: React.FC = () => {
                                             : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                                             }`}
                                     >
-                                        Next <ChevronRight size={16} />
+                                        {t('pronunciation.next')} <ChevronRight size={16} />
                                     </button>
                                 </div>
                             )}

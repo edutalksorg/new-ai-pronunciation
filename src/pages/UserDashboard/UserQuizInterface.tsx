@@ -181,7 +181,7 @@ const UserQuizInterface: React.FC = () => {
                                                     ? 'bg-slate-100/50 border-slate-200 text-slate-400'
                                                     : 'bg-white/50 dark:bg-slate-800/50 border-slate-200/50 dark:border-white/10 text-slate-600 dark:text-slate-300'
                                                     }`}>
-                                                    {quiz.difficulty || 'Medium'}
+                                                    {quiz.difficulty ? t(`quiz.difficultyLevels.${quiz.difficulty.toLowerCase()}`) : 'Medium'}
                                                 </span>
                                             </div>
                                         </div>
@@ -275,7 +275,7 @@ const UserQuizInterface: React.FC = () => {
                         <div className="mb-6">
                             <div className="flex justify-between items-end mb-3">
                                 <div>
-                                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-wider">Your Mastery</span>
+                                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-wider">{t('quiz.yourMastery')}</span>
                                     <span className="text-2xl font-extrabold text-slate-900 dark:text-white">{Math.round(((currentQuizIndex + 1) / quizzes.length) * 100)}%</span>
                                 </div>
                                 <BrainCircuit className="w-6 h-6 text-pink-500/30" />

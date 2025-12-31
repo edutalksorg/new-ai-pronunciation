@@ -114,6 +114,7 @@
   "referrals": {
     "title": "My Referrals",
     "subtitle": "Invite Friends & Earn Rewards",
+    "inviteFriends": "Invite Friends & Earn Rewards",
     "description": "Get a month of Premium for every friend who joins!",
     "yourLink": "Your Referral Link",
     "yourCode": "Your Referral Code",
@@ -132,6 +133,7 @@
     "reward": "Reward",
     "anonymousUser": "Anonymous User",
     "pending": "Pending",
+    "completed": "Completed",
     "noReferrals": "No referrals yet. Share your link!",
     "loading": "Loading referral program...",
     "errorLoad": "Failed to load referral data"
@@ -253,7 +255,13 @@
     "totalQuizzes": "total quizzes",
     "deleteSuccess": "Quiz deleted successfully",
     "publishSuccess": "Quiz published successfully! Users can now see it.",
-    "unpublishSuccess": "Quiz unpublished successfully"
+    "unpublishSuccess": "Quiz unpublished successfully",
+    "yourMastery": "Your Mastery",
+    "difficultyLevels": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    }
   },
   "topic": {
     "title": "Topics",
@@ -370,7 +378,19 @@
     "unmute": "Unmute",
     "connected": "Connected",
     "disconnected": "Disconnected",
-    "remainingTime": "Remaining Time"
+    "remainingTime": "Remaining Time",
+    "premiumActive": "Premium Active",
+    "limit": "Limit",
+    "onlineStatus": "Online",
+    "noOtherUsers": "No other users online.",
+    "voiceCallLabel": "Voice Call",
+    "ended": "Ended",
+    "connecting": "Connecting...",
+    "errorInitiating": "Failed to initiate call",
+    "pending": "Pending",
+    "failed": "Failed",
+    "ringing": "Ringing",
+    "declined": "Declined"
   },
   "pronunciation": {
     "title": "AI Pronunciation Practice",
@@ -389,7 +409,22 @@
     "unlocked": "Unlocked",
     "greatJob": "Great job! Accuracy",
     "nextUnlocked": "Next paragraph unlocked!",
-    "tryReach": "Try again to reach 75%!"
+    "tryReach": "Try again to reach 75%!",
+    "masterSkills": "Master your speaking skills",
+    "paragraph": "Paragraph",
+    "courseContent": "Course Content",
+    "page": "Page",
+    "trialEnded": "Trial Ended",
+    "trialExpiredMessage": "Your 24-hour preview has expired. Unlock unlimited pronunciation practice with Pro.",
+    "upgradeToPro": "Upgrade to Pro",
+    "prev": "Prev",
+    "next": "Next",
+    "recordingTips": "Recording Tips:",
+    "tipSpeakClearly": "Speak clearly and at a natural pace",
+    "tipAvoidNoise": "Avoid background noise for better accuracy",
+    "tipCheckMicrophone": "Make sure your microphone is working properly",
+    "tipPauseSentences": "Pause briefly between sentences if needed",
+    "recordingInstructions": "Click the button above to start recording. Read the text clearly and naturally."
   },
   "settingsPage": {
     "title": "Settings",
@@ -488,6 +523,18 @@
       "passwordSpecial": "Password must contain at least one special character (!@#$%^&*)",
       "passwordMatch": "Passwords don't match",
       "roleFixed": "Role is fixed to 'user' for public registration"
+    },
+    "verifyEmail": {
+      "verifyingAccount": "Verifying Account",
+      "pleaseWait": "Please wait while we confirm your email address...",
+      "success": "Success!",
+      "successMessage": "Verification successfully done! Please wait, you will be redirected to the login page.",
+      "redirecting": "Redirecting to login in",
+      "goToLogin": "Go to Login Now",
+      "error": "Oops!",
+      "errorMessage": "We couldn't verify your email. The link may have expired or is invalid.",
+      "requestNewLink": "Request New Link",
+      "backToLogin": "Back to Login"
     }
   },
   "messages": {

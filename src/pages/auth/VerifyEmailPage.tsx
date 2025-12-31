@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, Link, useParams } from 'react-router-dom';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { CheckCircle2, XCircle, Loader2, ArrowRight, Mail } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { authService } from '../../services/auth';
 import Button from '../../components/Button';
 import { Logo } from '../../components/common/Logo';
 
 const VerifyEmailPage: React.FC = () => {
+    const { t } = useTranslation();
     const [searchParams] = useSearchParams();
     const { token: paramsToken } = useParams();
     const navigate = useNavigate();
@@ -20,11 +22,11 @@ const VerifyEmailPage: React.FC = () => {
         // Dummy verification flow
         const timer = setTimeout(() => {
             setStatus('success');
-            setMessage('Verification successfully done! Please wait, you will be redirected to the login page.');
+            setMessage(t('auth.verifyEmail.successMessage'));
         }, 2000);
 
         return () => clearTimeout(timer);
-    }, []);
+    }, [t]);
 
     useEffect(() => {
         let timer: NodeJS.Timeout;
@@ -86,8 +88,12 @@ const VerifyEmailPage: React.FC = () => {
                                 >
                                     <Loader2 size={40} />
                                 </motion.div>
-                                <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Verifying Account</h2>
-                                <p className="text-slate-600 dark:text-slate-400">Please wait while we confirm your email address...</p>
+                                <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+                                    {t('auth.verifyEmail.verifyingAccount')}
+                                </h2>
+                                <p className="text-slate-600 dark:text-slate-400">
+                                    {t('auth.verifyEmail.pleaseWait')}
+                                </p>
                             </div>
                         )}
 
@@ -101,13 +107,15 @@ const VerifyEmailPage: React.FC = () => {
                                 >
                                     <CheckCircle2 size={48} />
                                 </motion.div>
-                                <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">Success!</h2>
+                                <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">
+                                    {t('auth.verifyEmail.success')}
+                                </h2>
                                 <p className="text-lg text-slate-600 dark:text-slate-300 mb-6">
                                     {message}
                                 </p>
                                 <div className="bg-slate-50 dark:bg-slate-800/80 rounded-2xl p-4 mb-8">
                                     <p className="text-sm text-slate-600 dark:text-slate-400">
-                                        Redirecting to login in <span className="font-bold text-primary-600 dark:text-primary-400">{countdown}s</span>...
+                                        {t('auth.verifyEmail.redirecting')} <span className="font-bold text-primary-600 dark:text-primary-400">{countdown}s</span>...
                                     </p>
                                 </div>
                                 <Button
@@ -116,7 +124,7 @@ const VerifyEmailPage: React.FC = () => {
                                     fullWidth
                                     className="flex items-center justify-center gap-2 group h-12"
                                 >
-                                    Go to Login Now
+                                    {t('auth.verifyEmail.goToLogin')}
                                     <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                                 </Button>
                             </div>
@@ -131,9 +139,11 @@ const VerifyEmailPage: React.FC = () => {
                                 >
                                     <XCircle size={48} />
                                 </motion.div>
-                                <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">Oops!</h2>
+                                <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">
+                                    {t('auth.verifyEmail.error')}
+                                </h2>
                                 <p className="text-lg text-slate-600 dark:text-slate-300 mb-8 leading-relaxed">
-                                    {message}
+                                    {message || t('auth.verifyEmail.errorMessage')}
                                 </p>
                                 <div className="space-y-3">
                                     <Button
@@ -143,13 +153,13 @@ const VerifyEmailPage: React.FC = () => {
                                         className="flex items-center justify-center gap-2 h-12"
                                     >
                                         <Mail size={18} />
-                                        Request New Link
+                                        {t('auth.verifyEmail.requestNewLink')}
                                     </Button>
                                     <Link
                                         to="/login"
                                         className="block text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors"
                                     >
-                                        Back to Login
+                                        {t('auth.verifyEmail.backToLogin')}
                                     </Link>
                                 </div>
                             </div>
