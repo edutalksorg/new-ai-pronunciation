@@ -260,7 +260,7 @@ const UserVoiceCall: React.FC = () => {
                 {/* Status Selector */}
                 <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2 px-4 py-2 bg-white/50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-white/10 rounded-xl">
-                        <div className={`w-2.5 h-2.5 rounded-full ${userStatus === 'online' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : userStatus === 'offline' ? 'bg-red-500' : 'bg-orange-500'}`} />
+                        <div className={`w-2.5 h-2.5 rounded-full ${userStatus === 'online' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-red-500'}`} />
                         <select
                             className="bg-transparent border-none text-slate-700 dark:text-slate-200 text-sm font-medium focus:ring-0 cursor-pointer"
                             value={userStatus}
@@ -273,7 +273,6 @@ const UserVoiceCall: React.FC = () => {
                         >
                             <option value="online" className="bg-white dark:bg-slate-800">{t('voiceCall.online')}</option>
                             <option value="offline" className="bg-white dark:bg-slate-800">{t('voiceCall.offline')}</option>
-                            <option value="busy" className="bg-white dark:bg-slate-800">{t('voiceCall.busy')}</option>
                         </select>
                     </div>
                 </div>
@@ -407,9 +406,9 @@ const UserVoiceCall: React.FC = () => {
                                     <div key={call.callId} className="p-4 hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors flex items-center justify-between group">
                                         <div className="flex items-center gap-4">
                                             <div className={`w-10 h-10 rounded-full flex items-center justify-center ${['missed', 'failed', 'declined'].includes(status.toLowerCase()) ? 'bg-red-500/10 text-red-500' :
-                                                    status.toLowerCase() === 'completed' ? 'bg-green-500/10 text-green-500' :
-                                                        ['pending', 'ringing'].includes(status.toLowerCase()) ? 'bg-yellow-500/10 text-yellow-500' :
-                                                            'bg-slate-500/10 text-slate-500'
+                                                status.toLowerCase() === 'completed' ? 'bg-green-500/10 text-green-500' :
+                                                    ['pending', 'ringing'].includes(status.toLowerCase()) ? 'bg-yellow-500/10 text-yellow-500' :
+                                                        'bg-slate-500/10 text-slate-500'
                                                 }`}>
                                                 {isIncoming ? <ArrowLeft size={18} className="rotate-45" /> : <Phone size={18} />}
                                             </div>
@@ -430,9 +429,9 @@ const UserVoiceCall: React.FC = () => {
                                                 {Math.floor(duration / 60)}:{String(duration % 60).padStart(2, '0')}
                                             </div>
                                             <p className={`text-xs mt-1 font-medium ${['missed', 'failed', 'declined'].includes(status.toLowerCase()) ? 'text-red-500' :
-                                                    status.toLowerCase() === 'completed' ? 'text-green-500' :
-                                                        ['pending', 'ringing'].includes(status.toLowerCase()) ? 'text-yellow-500' :
-                                                            'text-slate-500'
+                                                status.toLowerCase() === 'completed' ? 'text-green-500' :
+                                                    ['pending', 'ringing'].includes(status.toLowerCase()) ? 'text-yellow-500' :
+                                                        'text-slate-500'
                                                 }`}>
                                                 {(['ended', 'completed', 'missed', 'pending', 'failed', 'ringing', 'declined', 'busy'].includes(status.toLowerCase()))
                                                     ? t(`voiceCall.${status.toLowerCase()}`)
