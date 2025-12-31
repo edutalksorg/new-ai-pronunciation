@@ -4,6 +4,7 @@ import { callsService } from './calls';
 import {
     setSignalRConnected,
     setIncomingInvitation,
+    clearIncomingInvitation,
     CallInvitationEvent,
     acceptCall,
     setCallStatus,
@@ -313,6 +314,24 @@ class SignalRService {
             store.dispatch(endCall());
         });
 
+        // 3.5 CallCancelled (Specific event for cancellation)
+        register('CallCancelled', (payload: any) => {
+            callLogger.signalrEvent('CallCancelled', payload);
+            const callId = payload.callId || payload.CallId;
+            callLogger.info('🚫 Call cancelled event received', { callId });
+
+            import('../store/uiSlice').then(({ showToast }) => {
+                store.dispatch(showToast({
+                    message: 'Caller canceled the call',
+                    type: 'info'
+                }));
+            });
+
+            // Explicitly clear invitation and end call
+            store.dispatch(clearIncomingInvitation());
+            store.dispatch(endCall());
+        });
+
         // 4. CallEnded
         register('CallEnded', (payload: any) => {
             callLogger.signalrEvent('CallEnded', payload);
@@ -328,6 +347,22 @@ class SignalRService {
                 timestamp,
                 fullPayload: payload
             });
+
+            // PRIORITY: Check for caller cancellation to show user feedback and close popup immediately
+            if (reason && (reason.toLowerCase().includes('cancelled') || reason.toLowerCase().includes('canceled'))) {
+                callLogger.info('Call cancelled by caller - closing popup', { callId });
+                import('../store/uiSlice').then(({ showToast }) => {
+                    store.dispatch(showToast({
+                        message: 'Caller canceled the call',
+                        type: 'info'
+                    }));
+                });
+
+                // Explicitly clear invitation and end call state
+                store.dispatch(clearIncomingInvitation());
+                store.dispatch(endCall());
+                return;
+            }
 
             // Bypass backend duration limits as per user request
             if (reason && reason.toLowerCase().includes('maximum duration exceeded')) {

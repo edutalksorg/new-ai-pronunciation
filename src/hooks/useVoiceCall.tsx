@@ -315,9 +315,9 @@ export const useVoiceCall = () => {
 
             callLogger.info('Cancelling call', { callId: currentCall.callId, reason });
 
-            // Call API to cancel
-            callLogger.apiCall('POST', `/calls/${currentCall.callId}/cancel`, { reason });
-            await callsService.cancel(currentCall.callId, reason);
+            // Call API to cancel (using end endpoint as requested)
+            callLogger.apiCall('POST', `/calls/${currentCall.callId}/end`, reason);
+            await callsService.end(currentCall.callId, reason);
 
             // Leave SignalR session
             await signalRService.leaveCallSession(currentCall.callId);
