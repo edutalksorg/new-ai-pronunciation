@@ -88,8 +88,8 @@ const CallManager: React.FC = () => {
                                 .then(() => callLogger.info(`Updated availability to ${preferredStatus}`))
                                 .catch(err => callLogger.warning('Failed to auto-set availability', err));
                         } else {
-                            callLogger.info('Setting availability to Busy due to active call');
-                            callsService.updateAvailability('Busy').catch(err => callLogger.warning('Failed to set busy status', err));
+                            callLogger.info('Setting availability to Offline due to active call');
+                            callsService.updateAvailability('Offline').catch(err => callLogger.warning('Failed to set offline status', err));
                         }
                     }, 250);
                 })
@@ -147,8 +147,8 @@ const CallManager: React.FC = () => {
                         }
                     });
             } else {
-                callLogger.info('Setting availability to Busy due to active call');
-                callsService.updateAvailability('Busy').catch(err => callLogger.warning('Failed to set busy status', err));
+                callLogger.info('Setting availability to Offline due to active call');
+                callsService.updateAvailability('Offline').catch(err => callLogger.warning('Failed to set offline status', err));
             }
 
             return () => {
@@ -206,10 +206,9 @@ const CallManager: React.FC = () => {
                 .then(() => callLogger.info(`Updated availability to ${preferredStatus} (Call Ended)`))
                 .catch(err => callLogger.warning('Failed to restore availability', err));
         } else {
-            // connecting, ringing, active
-            callsService.updateAvailability('Busy')
-                .then(() => callLogger.info('Updated availability to Busy (Call Started)'))
-                .catch(err => callLogger.warning('Failed to set busy status', err));
+            callsService.updateAvailability('Offline')
+                .then(() => callLogger.info('Updated availability to Offline (Call Started)'))
+                .catch(err => callLogger.warning('Failed to set offline status', err));
         }
     }, [callState]);
 
@@ -230,22 +229,22 @@ const CallManager: React.FC = () => {
         let heartbeatInterval: NodeJS.Timeout | null = null;
 
         if (callState !== 'idle') {
-            callLogger.info('Starting Busy heartbeat');
+            callLogger.info('Starting Offline heartbeat');
             // Initial pulse
-            callsService.updateAvailability('Busy').catch(() => { });
+            callsService.updateAvailability('Offline').catch(() => { });
 
             // Pulse every 30 seconds
             heartbeatInterval = setInterval(() => {
-                callLogger.debug('Sending Busy heartbeat');
-                callsService.updateAvailability('Busy').catch(err =>
-                    callLogger.warning('Failed to send Busy heartbeat', err)
+                callLogger.debug('Sending Offline heartbeat');
+                callsService.updateAvailability('Offline').catch(err =>
+                    callLogger.warning('Failed to send Offline heartbeat', err)
                 );
             }, 30000);
         }
 
         return () => {
             if (heartbeatInterval) {
-                callLogger.info('Stopping Busy heartbeat');
+                callLogger.info('Stopping Offline heartbeat');
                 clearInterval(heartbeatInterval);
             }
         };
