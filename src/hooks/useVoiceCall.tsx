@@ -353,19 +353,8 @@ export const useVoiceCall = () => {
     /**
      * Automatically manage user availability status based on call state
      */
-    useEffect(() => {
-        // Note: 'InCall' status is managed automatically by the backend when users join/leave calls
-        // We don't need to manually update it here as it causes 400 errors
-
-        // Revert to 'Online' (or preferred status) when call ends (becomes idle)
-        if (callState === 'idle' && user) {
-            const preferredStatus = localStorage.getItem('user_availability_preference') === 'offline' ? 'Offline' : 'Online';
-            callLogger.info(`Reverting availability to ${preferredStatus}`);
-            callsService.updateAvailability(preferredStatus as 'Online' | 'Offline').catch(err => {
-                callLogger.warning(`Failed to revert to ${preferredStatus} status`, err);
-            });
-        }
-    }, [callState, user]);
+    // Availability is now managed globally by CallManager.tsx
+    // We removed the local useEffect here to avoid race conditions.
 
     return {
         // State
